@@ -10,6 +10,13 @@
 
 ---
 
+## Runtime Note For This Worktree
+
+Use the local virtual environment created at `.venv/`. In this Windows workspace, replace plan commands as follows:
+
+- `pytest ...` becomes `.venv\Scripts\python.exe -m pytest ...`
+- `python -m django ...` becomes `.venv\Scripts\python.exe -m django ...`
+
 ## Scope Split
 
 The approved spec describes a full platform with several subsystems. This plan implements a complete foundation that can be installed, migrated, bootstrapped, evaluated, called through an API, and opened in a staff-only dashboard.
