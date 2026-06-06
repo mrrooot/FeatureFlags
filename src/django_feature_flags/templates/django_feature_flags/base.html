@@ -1,0 +1,28 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Django Feature Flags</title>
+  <link rel="stylesheet" href="{% static 'django_feature_flags/dashboard.css' %}">
+</head>
+<body>
+  <aside class="dff-sidebar">
+    <div class="dff-brand">FeatureFlow</div>
+    <nav>
+      <a href="{% url 'django_feature_flags_dashboard:home' %}">Overview</a>
+      <a href="{% url 'django_feature_flags_dashboard:flag_list' %}">Flags</a>
+      <a href="#">Segments</a>
+      <a href="#">Experiments</a>
+      <a href="#">Metrics</a>
+      <a href="#">Approvals</a>
+      <a href="#">Audit</a>
+    </nav>
+  </aside>
+  <main class="dff-main">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
+

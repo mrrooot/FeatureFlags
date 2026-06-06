@@ -1,0 +1,35 @@
+{% extends "django_feature_flags/base.html" %}
+
+{% block content %}
+<header class="dff-header">
+  <div>
+    <p class="dff-kicker">{{ style_name }}</p>
+    <h1>Flags</h1>
+  </div>
+</header>
+<section class="dff-panel">
+  <table class="dff-table">
+    <thead>
+      <tr>
+        <th>Flag</th>
+        <th>Project</th>
+        <th>Type</th>
+        <th>Archived</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for flag in flags %}
+      <tr>
+        <td><strong>{{ flag.key }}</strong><span>{{ flag.name }}</span></td>
+        <td>{{ flag.project.key }}</td>
+        <td>{{ flag.value_type }}</td>
+        <td>{{ flag.archived|yesno:"Yes,No" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="4">No flags yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
+
