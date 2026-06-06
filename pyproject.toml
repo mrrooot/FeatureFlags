@@ -7,7 +7,7 @@ name = "django-featureflags"
 version = "0.1.0"
 description = "Embedded Django feature flag platform with dashboard, evaluation API, events, and experiments."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 dependencies = [
   "Django>=4.2,<6.0",
 ]
