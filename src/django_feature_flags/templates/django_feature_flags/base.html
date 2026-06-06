@@ -13,18 +13,22 @@
       <span class="dff-brand-mark">FF</span>
       <span>
         <strong>FeatureFlow</strong>
-        <small>Editorial Ledger</small>
+        <small>Release Observatory</small>
       </span>
     </div>
-    <nav>
-      <a href="{% url 'django_feature_flags_dashboard:home' %}">Overview</a>
-      <a href="{% url 'django_feature_flags_dashboard:flag_list' %}">Flags</a>
-      <a href="#">Segments</a>
-      <a href="#">Experiments</a>
-      <a href="#">Metrics</a>
-      <a href="#">Approvals</a>
-      <a href="#">Audit</a>
+    <nav class="dff-sidebar-nav">
+      <a href="{% url 'django_feature_flags_dashboard:home' %}">Overview <span>Control</span></a>
+      <a href="{% url 'django_feature_flags_dashboard:flag_list' %}">Flags <span>Ledger</span></a>
+      <a href="#">Segments <span>Ready</span></a>
+      <a href="#">Experiments <span>Live</span></a>
+      <a href="#">Approvals <span>Queue</span></a>
+      <a href="#">Audit <span>Trace</span></a>
     </nav>
+    <div class="dff-sidebar-note">
+      <span class="dff-kicker">Posture</span>
+      <strong>Safe by default</strong>
+      <p>New environment states start disabled until a release owner intentionally rolls them out.</p>
+    </div>
   </aside>
   <main class="dff-main" id="main">
     {% if messages %}

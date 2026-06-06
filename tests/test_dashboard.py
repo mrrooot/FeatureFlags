@@ -94,7 +94,7 @@ def test_flag_list_shows_create_action(client, staff_user):
 
 
 @pytest.mark.django_db
-def test_overview_uses_editorial_ledger_workspace(client, staff_user):
+def test_overview_uses_release_observatory_workspace(client, staff_user):
     project = Project.objects.create(key="ecommerce", name="Ecommerce")
     environment = Environment.objects.create(project=project, key="production", name="Production")
     flag = FeatureFlag.objects.create(project=project, key="new_checkout", name="New Checkout", value_type="boolean")
@@ -106,9 +106,11 @@ def test_overview_uses_editorial_ledger_workspace(client, staff_user):
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert "Editorial Ledger" in content
+    assert "Release Observatory" in content
     assert "Release posture" in content
+    assert "Release timeline" in content
     assert "Latest flag ledger" in content
+    assert "Reviewable by default" in content
     assert "new_checkout" in content
 
 
@@ -126,13 +128,15 @@ def test_flag_list_uses_ledger_language_and_status_stamps(client, staff_user):
     assert response.status_code == 200
     content = response.content.decode()
     assert "Flag ledger" in content
+    assert "Scan mode" in content
+    assert "Flag keys" in content
     assert "Configured off" in content
     assert "staging" in content
     assert "Recommendations" in content
 
 
 @pytest.mark.django_db
-def test_create_flag_form_uses_guided_editorial_copy(client, staff_user):
+def test_create_flag_form_uses_guided_observatory_copy(client, staff_user):
     project = Project.objects.create(key="ecommerce", name="Ecommerce")
     Environment.objects.create(project=project, key="staging", name="Staging")
     client.force_login(staff_user)
@@ -141,6 +145,7 @@ def test_create_flag_form_uses_guided_editorial_copy(client, staff_user):
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert "Setup ledger" in content
+    assert "Launch sequence" in content
     assert "Default variation" in content
-    assert "Safely off" in content
+    assert "Safe by default" in content
+    assert "Project scoped key" in content

@@ -3,7 +3,7 @@
 {% block content %}
 <header class="dff-header">
   <div>
-    <p class="dff-kicker">{{ style_name }} / Setup ledger</p>
+    <p class="dff-kicker">{{ style_name }} / Launch sequence</p>
     <h1>Create flag</h1>
     <p class="dff-subtitle">Define the first default value and attach the flag to project environments with a safe initial posture.</p>
   </div>
@@ -21,7 +21,7 @@
     {% endif %}
 
     <div class="dff-form-section">
-      <p class="dff-kicker">Setup ledger</p>
+      <p class="dff-kicker">Launch sequence</p>
       <h2>Flag identity</h2>
       <div class="dff-form-grid">
         <div class="dff-field">
@@ -29,7 +29,7 @@
           {{ form.project }}
           {{ form.project.errors }}
         </div>
-        <div class="dff-field">
+        <div class="dff-field dff-code-field">
           <label for="{{ form.key.id_for_label }}">Flag key</label>
           {{ form.key }}
           {% if form.key.help_text %}<small>{{ form.key.help_text }}</small>{% endif %}
@@ -76,15 +76,22 @@
     </div>
   </form>
 
-  <aside class="dff-panel dff-side-panel">
-    <p class="dff-kicker">Safely off</p>
-    <h2>Default variation</h2>
-    <p>The package creates one default variation and disabled states for every selected environment.</p>
-    <div class="dff-side-list">
-      <span>Project scoped key</span>
-      <span>Validation before save</span>
-      <span>Disabled rollout states</span>
-    </div>
+  <aside class="dff-form-sidebar">
+    <section class="dff-panel dff-side-panel dff-side-panel-paper">
+      <p class="dff-kicker">Safe by default</p>
+      <h2>Default variation</h2>
+      <p>The package creates one default variation and disabled states for every selected environment.</p>
+      <div class="dff-side-list">
+        <span>Project scoped key</span>
+        <span>Validation before save</span>
+        <span>Disabled rollout states</span>
+      </div>
+    </section>
+    <section class="dff-panel dff-side-panel">
+      <p class="dff-kicker">Release checks</p>
+      <h2>Before rollout</h2>
+      <p>Review the project, flag key, default value, and target environments before creating the release control.</p>
+    </section>
   </aside>
 </section>
 {% endblock %}

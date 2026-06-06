@@ -3,45 +3,104 @@
 {% block content %}
 <header class="dff-header dff-command-header">
   <div>
-    <p class="dff-kicker">{{ style_name }} / Editorial Ledger</p>
+    <p class="dff-kicker">{{ style_name }} / Release Observatory</p>
     <h1>Control Center</h1>
-    <p class="dff-subtitle">A polished command desk for reviewing projects, flags, and release posture from your Django app.</p>
+    <p class="dff-subtitle">A high-contrast operational cockpit for reviewing release state, creating flags, and scanning recent changes.</p>
   </div>
   <div class="dff-actions">
-    <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:flag_list' %}">View ledger</a>
+    <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:flag_list' %}">Open ledger</a>
     <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">New flag</a>
   </div>
 </header>
 
-<section class="dff-command-grid">
-  <div class="dff-kpi-grid">
-    <article class="dff-panel dff-kpi-card">
-      <span class="dff-label">Projects</span>
-      <strong>{{ project_count }}</strong>
-      <p>Workspaces currently registered for flag control.</p>
-    </article>
-    <article class="dff-panel dff-kpi-card">
-      <span class="dff-label">Flags</span>
-      <strong>{{ flag_count }}</strong>
-      <p>Feature decisions available to environments and SDKs.</p>
-    </article>
-    <article class="dff-panel dff-kpi-card dff-kpi-card-accent">
+<section class="dff-observatory-grid">
+  <article class="dff-panel dff-radar-panel">
+    <div class="dff-radar-ring"></div>
+    <div class="dff-radar-beam"></div>
+    <div class="dff-radar-node dff-radar-node-prod">
+      <strong>Production</strong>
+      <span>Live decisions stay visible before rollout.</span>
+    </div>
+    <div class="dff-radar-node dff-radar-node-stage">
+      <strong>Staging</strong>
+      <span>Pending changes keep their safe default.</span>
+    </div>
+    <div class="dff-radar-node dff-radar-node-audit">
+      <strong>Audit</strong>
+      <span>Reviewable by default</span>
+    </div>
+    <div class="dff-radar-copy">
+      <p class="dff-kicker">Release posture</p>
+      <h2>Every environment becomes visible before it becomes risky.</h2>
+      <p>New flags start with explicit variations and disabled environment states so production changes can be reviewed before rollout.</p>
+      <div class="dff-status-row">
+        <span class="dff-status dff-status-live">Live</span>
+        <span class="dff-status dff-status-off">Configured off</span>
+        <span class="dff-status dff-status-stage">Staging</span>
+        <span class="dff-status dff-status-archived">Archived</span>
+      </div>
+    </div>
+  </article>
+
+  <aside class="dff-observatory-side">
+    <article class="dff-panel dff-metric-panel">
       <span class="dff-label">Experiment health</span>
       <strong>Ready</strong>
+      <div class="dff-meter"><span></span></div>
       <p>Evaluation, events, and audit foundations are installed.</p>
     </article>
-  </div>
-
-  <aside class="dff-panel dff-posture-panel">
-    <p class="dff-kicker">Release posture</p>
-    <h2>Controlled by default</h2>
-    <p>New flags start with explicit variations and environment states so production changes can be reviewed before rollout.</p>
-    <div class="dff-posture-list">
-      <span>Audit trail ready</span>
-      <span>Environment scoped</span>
-      <span>SDK key protected</span>
-    </div>
+    <article class="dff-panel dff-metric-panel dff-metric-panel-paper">
+      <span class="dff-label">Default posture</span>
+      <strong>Off</strong>
+      <p>New flag states stay disabled until a team intentionally rolls them out.</p>
+    </article>
   </aside>
+</section>
+
+<section class="dff-metric-grid">
+  <article class="dff-panel dff-metric-panel">
+      <span class="dff-label">Projects</span>
+      <strong>{{ project_count }}</strong>
+      <p>Registered workspaces for flag control.</p>
+  </article>
+  <article class="dff-panel dff-metric-panel">
+    <span class="dff-label">Flags</span>
+    <strong>{{ flag_count }}</strong>
+    <p>Feature decisions available to environments and SDKs.</p>
+  </article>
+  <article class="dff-panel dff-metric-panel">
+    <span class="dff-label">Review mode</span>
+    <strong>On</strong>
+    <p>Audit and events are treated as first-class release signals.</p>
+  </article>
+</section>
+
+<section class="dff-panel dff-timeline-panel">
+  <div class="dff-section-header">
+    <div>
+      <p class="dff-kicker">Release timeline</p>
+      <h2>Recent control signals</h2>
+    </div>
+    <span class="dff-status dff-status-stage">Reviewable</span>
+  </div>
+  <div class="dff-timeline-strip">
+    <div class="dff-timeline-event dff-timeline-event-live">
+      <strong>Default variations</strong>
+      <span>Created with every new flag.</span>
+    </div>
+    <div class="dff-timeline-event dff-timeline-event-off">
+      <strong>Safe states</strong>
+      <span>Selected environments start configured off.</span>
+    </div>
+    <div class="dff-timeline-event dff-timeline-event-stage">
+      <strong>SDK ready</strong>
+      <span>Flags are available through environment keys.</span>
+    </div>
+    <div class="dff-timeline-event dff-timeline-event-archived">
+      <strong>Audit trail</strong>
+      <span>State changes remain reviewable.</span>
+    </div>
+  </div>
 </section>
 
 <section class="dff-section">
@@ -50,7 +109,7 @@
       <p class="dff-kicker">Recent activity</p>
       <h2>Latest flag ledger</h2>
     </div>
-    <a class="dff-link" href="{% url 'django_feature_flags_dashboard:flag_list' %}">Open all flags</a>
+    <a class="dff-link" href="{% url 'django_feature_flags_dashboard:flag_list' %}">Scan all flags</a>
   </div>
   <div class="dff-panel dff-panel-flush">
     {% if recent_flags %}
@@ -60,6 +119,7 @@
           <th>Flag</th>
           <th>Project</th>
           <th>Type</th>
+          <th>Environments</th>
           <th>State</th>
         </tr>
       </thead>
@@ -68,12 +128,21 @@
         <tr>
           <td><strong>{{ flag.key }}</strong><span>{{ flag.name }}</span></td>
           <td>{{ flag.project.key }}</td>
-          <td><span class="dff-badge">{{ flag.value_type }}</span></td>
+          <td><span class="dff-status dff-status-stage">{{ flag.value_type }}</span></td>
+          <td>
+            <div class="dff-chip-row">
+              {% for state in flag.states.all %}
+              <span class="dff-chip">{{ state.environment.key }}</span>
+              {% empty %}
+              <span class="dff-muted-text">No states</span>
+              {% endfor %}
+            </div>
+          </td>
           <td>
             {% if flag.archived %}
-            <span class="dff-badge dff-badge-muted">Archived</span>
+            <span class="dff-status dff-status-archived">Archived</span>
             {% else %}
-            <span class="dff-badge dff-badge-success">Ready</span>
+            <span class="dff-status dff-status-live">Ready</span>
             {% endif %}
           </td>
         </tr>
@@ -82,7 +151,7 @@
     </table>
     {% else %}
     <div class="dff-empty">
-      <strong>No flags in the ledger</strong>
+      <strong>No flags in orbit</strong>
       <span>Create the first flag and attach it to staging, production, or any project environment.</span>
       <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">New flag</a>
     </div>

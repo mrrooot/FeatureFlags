@@ -3,14 +3,28 @@
 {% block content %}
 <header class="dff-header">
   <div>
-    <p class="dff-kicker">{{ style_name }} / Flag ledger</p>
+    <p class="dff-kicker">{{ style_name }} / Release Observatory</p>
     <h1>Flag ledger</h1>
-    <p class="dff-subtitle">Scan rollout defaults, project ownership, and environment posture from one operational table.</p>
+    <p class="dff-subtitle">Scan rollout defaults, project ownership, flag keys, and environment posture from one operational table.</p>
   </div>
   <div class="dff-actions">
     <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">New flag</a>
   </div>
 </header>
+
+<section class="dff-ledger-primer">
+  <article class="dff-panel dff-primer-panel">
+    <span class="dff-label">Scan mode</span>
+    <strong>Flag keys</strong>
+    <p>Monospace identifiers stay visually distinct from display names so release owners can compare technical values quickly.</p>
+  </article>
+  <article class="dff-panel dff-primer-panel dff-primer-panel-live">
+    <span class="dff-label">Environment posture</span>
+    <strong>Live or off</strong>
+    <p>Status stamps keep risky rollout states visible at the edge of each row.</p>
+  </article>
+</section>
+
 <section class="dff-panel dff-panel-flush">
   {% if flag_rows %}
   <table class="dff-table dff-ledger-table">
@@ -26,9 +40,9 @@
     <tbody>
       {% for row in flag_rows %}
       <tr>
-        <td><strong>{{ row.flag.key }}</strong><span>{{ row.flag.name }}</span></td>
+        <td><strong class="dff-code">{{ row.flag.key }}</strong><span>{{ row.flag.name }}</span></td>
         <td><span class="dff-project-stamp">{{ row.flag.project.key }}</span></td>
-        <td><span class="dff-badge">{{ row.flag.value_type }}</span></td>
+        <td><span class="dff-status dff-status-stage">{{ row.flag.value_type }}</span></td>
         <td>
           <div class="dff-chip-row">
             {% for state in row.states %}
@@ -40,11 +54,11 @@
         </td>
         <td>
           {% if row.flag.archived %}
-          <span class="dff-badge dff-badge-muted">Archived</span>
+          <span class="dff-status dff-status-archived">Archived</span>
           {% elif row.enabled_count %}
-          <span class="dff-badge dff-badge-success">{{ row.enabled_count }} enabled</span>
+          <span class="dff-status dff-status-live">{{ row.enabled_count }} enabled</span>
           {% else %}
-          <span class="dff-badge dff-badge-warning">Configured off</span>
+          <span class="dff-status dff-status-off">Configured off</span>
           {% endif %}
         </td>
       </tr>
@@ -53,8 +67,8 @@
   </table>
   {% else %}
   <div class="dff-empty">
-    <strong>No flags in the ledger</strong>
-    <span>Create a project flag, choose its environments, and the package will generate its default variation and states.</span>
+    <strong>No flags in orbit</strong>
+    <span>Create a project flag, choose its environments, and the package will generate its default variation and disabled states.</span>
     <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">New flag</a>
   </div>
   {% endif %}
