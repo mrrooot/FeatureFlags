@@ -37,23 +37,27 @@ def test_create_flag_requires_staff(client):
 
 
 @pytest.mark.django_db
-def test_staff_can_open_create_flag_form(client, staff_user):
+def test_staff_can_open_create_flag_form(client, staff_user, settings):
+    settings.DJANGO_FEATURE_FLAGS_ENVIRONMENTS = ("development", "staging", "production")
     project = Project.objects.create(key="ecommerce", name="Ecommerce")
-    Environment.objects.create(project=project, key="staging", name="Staging")
     client.force_login(staff_user)
 
     response = client.get("/flags/flags/new/")
 
     assert response.status_code == 200
     assert b"Create flag" in response.content
-    assert b"staging" in response.content
+    content = response.content.decode()
+    assert "Configured environments" in content
+    assert "development" in content
+    assert "staging" in content
+    assert "production" in content
+    assert 'name="environments"' not in content
 
 
 @pytest.mark.django_db
-def test_staff_can_create_flag_with_default_variation_and_environment_states(client, staff_user):
+def test_staff_can_create_flag_with_default_variation_and_configured_environment_states(client, staff_user, settings):
+    settings.DJANGO_FEATURE_FLAGS_ENVIRONMENTS = ("development", "staging", "production")
     project = Project.objects.create(key="ecommerce", name="Ecommerce")
-    staging = Environment.objects.create(project=project, key="staging", name="Staging")
-    production = Environment.objects.create(project=project, key="production", name="Production")
     client.force_login(staff_user)
 
     response = client.post(
@@ -65,7 +69,6 @@ def test_staff_can_create_flag_with_default_variation_and_environment_states(cli
             "description": "Personalized products module",
             "value_type": "boolean",
             "default_value": "true",
-            "environments": [staging.id, production.id],
         },
     )
 
@@ -78,8 +81,83 @@ def test_staff_can_create_flag_with_default_variation_and_environment_states(cli
     assert variation.name == "Default"
     assert variation.value is True
     assert variation.is_default is True
-    assert set(flag.states.values_list("environment__key", flat=True)) == {"staging", "production"}
-    assert flag.states.filter(enabled=False, default_variation=variation).count() == 2
+    assert set(project.environments.values_list("key", flat=True)) == {"development", "staging", "production"}
+    assert set(flag.states.values_list("environment__key", flat=True)) == {"development", "staging", "production"}
+    assert flag.states.filter(enabled=False, default_variation=variation).count() == 3
+
+
+@pytest.mark.django_db
+def test_staff_can_update_flag_and_sync_configured_environment_states(client, staff_user, settings):
+    settings.DJANGO_FEATURE_FLAGS_ENVIRONMENTS = ("development", "production")
+    project = Project.objects.create(key="ecommerce", name="Ecommerce")
+    development = Environment.objects.create(project=project, key="development", name="Development")
+    flag = FeatureFlag.objects.create(
+        project=project,
+        key="recommendations",
+        name="Recommendations",
+        description="Old copy",
+        value_type="boolean",
+    )
+    default = Variation.objects.create(flag=flag, key="default", name="Default", value=False, is_default=True)
+    FlagState.objects.create(flag=flag, environment=development, enabled=False, default_variation=default)
+    client.force_login(staff_user)
+
+    response = client.post(
+        reverse("django_feature_flags_dashboard:flag_update", kwargs={"pk": flag.pk}),
+        {
+            "project": project.id,
+            "key": "recommendations",
+            "name": "Recommendations v2",
+            "description": "Updated rollout decision",
+            "value_type": "boolean",
+            "default_value": "true",
+        },
+    )
+
+    assert response.status_code == 302
+    assert response["Location"] == "/flags/flags/"
+    flag.refresh_from_db()
+    default.refresh_from_db()
+    assert flag.name == "Recommendations v2"
+    assert flag.description == "Updated rollout decision"
+    assert default.value is True
+    assert set(project.environments.values_list("key", flat=True)) == {"development", "production"}
+    assert set(flag.states.values_list("environment__key", flat=True)) == {"development", "production"}
+    assert flag.states.filter(enabled=False, default_variation=default).count() == 2
+
+
+@pytest.mark.django_db
+def test_staff_can_open_update_flag_form(client, staff_user, settings):
+    settings.DJANGO_FEATURE_FLAGS_ENVIRONMENTS = ("development", "production")
+    project = Project.objects.create(key="ecommerce", name="Ecommerce")
+    flag = FeatureFlag.objects.create(project=project, key="recommendations", name="Recommendations", value_type="boolean")
+    Variation.objects.create(flag=flag, key="default", name="Default", value=False, is_default=True)
+    client.force_login(staff_user)
+
+    response = client.get(reverse("django_feature_flags_dashboard:flag_update", kwargs={"pk": flag.pk}))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Update flag" in content
+    assert "Configured environments" in content
+    assert "development" in content
+    assert "production" in content
+    assert 'name="environments"' not in content
+
+
+@pytest.mark.django_db
+def test_flag_list_shows_update_action(client, staff_user):
+    project = Project.objects.create(key="ecommerce", name="Ecommerce")
+    flag = FeatureFlag.objects.create(project=project, key="recommendations", name="Recommendations", value_type="boolean")
+    Variation.objects.create(flag=flag, key="default", name="Default", value=False, is_default=True)
+    client.force_login(staff_user)
+
+    response = client.get(reverse("django_feature_flags_dashboard:flag_list"))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Edit flag" in content
+    assert reverse("django_feature_flags_dashboard:flag_update", kwargs={"pk": flag.pk}) in content
 
 
 @pytest.mark.django_db
@@ -136,9 +214,9 @@ def test_flag_list_uses_ledger_language_and_status_stamps(client, staff_user):
 
 
 @pytest.mark.django_db
-def test_create_flag_form_uses_guided_observatory_copy(client, staff_user):
+def test_create_flag_form_uses_guided_observatory_copy(client, staff_user, settings):
+    settings.DJANGO_FEATURE_FLAGS_ENVIRONMENTS = ("development", "staging", "production")
     project = Project.objects.create(key="ecommerce", name="Ecommerce")
-    Environment.objects.create(project=project, key="staging", name="Staging")
     client.force_login(staff_user)
 
     response = client.get(reverse("django_feature_flags_dashboard:flag_create"))
@@ -149,3 +227,4 @@ def test_create_flag_form_uses_guided_observatory_copy(client, staff_user):
     assert "Default variation" in content
     assert "Safe by default" in content
     assert "Project scoped key" in content
+    assert "Configured environments" in content

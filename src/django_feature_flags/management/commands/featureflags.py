@@ -67,11 +67,11 @@ class Command(BaseCommand):
         )
         created_secrets = []
 
-        for environment_key in package_settings.DEFAULT_ENVIRONMENTS:
+        for environment_key in package_settings.configured_environment_keys():
             environment, _ = Environment.objects.get_or_create(
                 project=project,
                 key=environment_key,
-                defaults={"name": self.environment_name(environment_key)},
+                defaults={"name": package_settings.environment_name(environment_key)},
             )
             if not SDKKey.objects.filter(environment=environment, name="Server SDK").exists():
                 sdk_key = SDKKey.create_for_environment(environment, name="Server SDK")
@@ -87,7 +87,7 @@ class Command(BaseCommand):
 
     @staticmethod
     def environment_name(environment_key):
-        return environment_key.replace("-", " ").replace("_", " ").title()
+        return package_settings.environment_name(environment_key)
 
     def handle_export(self, options):
         project = Project.objects.get(key=options["project"])

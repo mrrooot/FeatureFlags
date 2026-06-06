@@ -3,9 +3,9 @@
 {% block content %}
 <header class="dff-header">
   <div>
-    <p class="dff-kicker">{{ style_name }} / Launch sequence</p>
-    <h1>Create flag</h1>
-    <p class="dff-subtitle">Define the first default value and attach the flag to project environments with a safe initial posture.</p>
+    <p class="dff-kicker">{{ style_name }} / {{ form_kicker }}</p>
+    <h1>{{ form_title }}</h1>
+    <p class="dff-subtitle">Define the flag identity, default value, and configured environment posture from one release console.</p>
   </div>
   <div class="dff-actions">
     <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:flag_list' %}">Back to ledger</a>
@@ -21,7 +21,7 @@
     {% endif %}
 
     <div class="dff-form-section">
-      <p class="dff-kicker">Launch sequence</p>
+      <p class="dff-kicker">{{ form_kicker }}</p>
       <h2>Flag identity</h2>
       <div class="dff-form-grid">
         <div class="dff-field">
@@ -62,35 +62,44 @@
           {% if form.default_value.help_text %}<small>{{ form.default_value.help_text }}</small>{% endif %}
           {{ form.default_value.errors }}
         </div>
-        <fieldset class="dff-field dff-field-full">
-          <legend>Environments</legend>
-          <div class="dff-checkbox-list">{{ form.environments }}</div>
-          {{ form.environments.errors }}
-        </fieldset>
       </div>
+    </div>
+
+    <div class="dff-form-section">
+      <p class="dff-kicker">Configured environments</p>
+      <h2>Environment scope</h2>
+      <div class="dff-env-grid">
+        {% for environment in form.configured_environments %}
+        <span class="dff-env-card">
+          <strong>{{ environment.key }}</strong>
+          <small>{{ environment.name }}</small>
+        </span>
+        {% endfor %}
+      </div>
+      <p class="dff-form-note">Loaded from <span>DJANGO_FEATURE_FLAGS_ENVIRONMENTS</span>. Missing project environments and disabled flag states are created automatically on save.</p>
     </div>
 
     <div class="dff-form-actions">
       <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:flag_list' %}">Cancel</a>
-      <button class="dff-button dff-button-primary" type="submit">Create flag</button>
+      <button class="dff-button dff-button-primary" type="submit">{{ submit_label }}</button>
     </div>
   </form>
 
   <aside class="dff-form-sidebar">
     <section class="dff-panel dff-side-panel dff-side-panel-paper">
       <p class="dff-kicker">Safe by default</p>
-      <h2>Default variation</h2>
-      <p>The package creates one default variation and disabled states for every selected environment.</p>
+      <h2>{{ side_heading }}</h2>
+      <p>The package creates or updates the default variation and keeps configured environment states disabled until rollout.</p>
       <div class="dff-side-list">
         <span>Project scoped key</span>
-        <span>Validation before save</span>
+        <span>.env configured scope</span>
         <span>Disabled rollout states</span>
       </div>
     </section>
     <section class="dff-panel dff-side-panel">
       <p class="dff-kicker">Release checks</p>
       <h2>Before rollout</h2>
-      <p>Review the project, flag key, default value, and target environments before creating the release control.</p>
+      <p>Review the project, flag key, default value, and configured environment scope before saving the release control.</p>
     </section>
   </aside>
 </section>

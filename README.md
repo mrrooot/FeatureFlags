@@ -33,6 +33,12 @@ python manage.py migrate
 python manage.py featureflags bootstrap --project ecommerce --name Ecommerce
 ```
 
+Configure dashboard/bootstrap environments from your project settings or `.env`:
+
+```env
+DJANGO_FEATURE_FLAGS_ENVIRONMENTS=development,staging,production
+```
+
 ## Local Evaluation
 
 ```python

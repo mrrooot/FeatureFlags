@@ -751,6 +751,26 @@ h3 {
   border-bottom: 2px solid rgba(244, 188, 79, 0.44);
 }
 
+.dff-table-action {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  border: 1px solid rgba(113, 246, 188, 0.32);
+  border-radius: 8px;
+  padding: 0 11px;
+  color: var(--dff-mint);
+  background: rgba(113, 246, 188, 0.08);
+  font-size: 12px;
+  font-weight: 950;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.dff-table-action:hover {
+  color: #06100c;
+  background: var(--dff-mint);
+}
+
 .dff-muted-text {
   color: var(--dff-muted);
 }
@@ -894,38 +914,53 @@ h3 {
   line-height: 1.45;
 }
 
-.dff-checkbox-list {
+.dff-env-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.dff-env-card {
+  min-height: 82px;
+  display: grid;
+  align-content: center;
+  gap: 6px;
   border: 1px solid #d4bf96;
   border-radius: 8px;
-  padding: 8px;
-  background: rgba(255, 249, 237, 0.68);
+  padding: 12px;
+  background:
+    linear-gradient(135deg, rgba(113, 246, 188, 0.12), transparent 58%),
+    var(--dff-paper-soft);
 }
 
-.dff-checkbox-list > div {
-  display: grid;
-  gap: 4px;
+.dff-env-card strong,
+.dff-env-card small {
+  display: block;
 }
 
-.dff-checkbox-list label {
-  min-height: 38px;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 0 8px;
-  border-radius: 8px;
+.dff-env-card strong {
   color: var(--dff-paper-ink);
-  font-family: var(--dff-font-ui);
+  font-family: var(--dff-font-code);
   font-size: 13px;
+  font-weight: 950;
+}
+
+.dff-env-card small {
+  color: #715f49;
+  font-size: 11px;
   font-weight: 850;
 }
 
-.dff-checkbox-list label:hover {
-  background: var(--dff-paper-soft);
+.dff-form-note {
+  margin: 0;
+  color: #715f49;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
-.dff-checkbox-list input {
-  width: 16px;
-  min-height: 16px;
+.dff-form-note span {
+  font-family: var(--dff-font-code);
+  font-weight: 950;
 }
 
 .errorlist {
@@ -1024,6 +1059,7 @@ textarea:focus-visible {
 
   .dff-metric-grid,
   .dff-ledger-primer,
+  .dff-env-grid,
   .dff-timeline-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1055,6 +1091,7 @@ textarea:focus-visible {
   .dff-metric-grid,
   .dff-ledger-primer,
   .dff-timeline-strip,
+  .dff-env-grid,
   .dff-form-grid {
     grid-template-columns: 1fr;
   }

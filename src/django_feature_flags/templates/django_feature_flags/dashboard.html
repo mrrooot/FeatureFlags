@@ -32,7 +32,7 @@
     <div class="dff-radar-copy">
       <p class="dff-kicker">Release posture</p>
       <h2>Every environment becomes visible before it becomes risky.</h2>
-      <p>New flags start with explicit variations and disabled environment states so production changes can be reviewed before rollout.</p>
+      <p>New flags start with explicit variations and disabled states for configured environments so production changes can be reviewed before rollout.</p>
       <div class="dff-status-row">
         <span class="dff-status dff-status-live">Live</span>
         <span class="dff-status dff-status-off">Configured off</span>
@@ -90,7 +90,7 @@
     </div>
     <div class="dff-timeline-event dff-timeline-event-off">
       <strong>Safe states</strong>
-      <span>Selected environments start configured off.</span>
+      <span>Configured environments start off.</span>
     </div>
     <div class="dff-timeline-event dff-timeline-event-stage">
       <strong>SDK ready</strong>
@@ -152,7 +152,7 @@
     {% else %}
     <div class="dff-empty">
       <strong>No flags in orbit</strong>
-      <span>Create the first flag and attach it to staging, production, or any project environment.</span>
+      <span>Create the first flag and the configured environments will be attached automatically.</span>
       <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">New flag</a>
     </div>
     {% endif %}

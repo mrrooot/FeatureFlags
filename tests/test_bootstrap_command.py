@@ -1,6 +1,7 @@
 import pytest
 from django.core.management import call_command
 
+from django_feature_flags import settings as package_settings
 from django_feature_flags.models import Environment, Project, SDKKey
 
 
@@ -21,3 +22,9 @@ def test_bootstrap_is_idempotent():
 
     assert Project.objects.count() == 1
     assert Environment.objects.count() == 3
+
+
+def test_configured_environment_keys_reads_process_environment(monkeypatch):
+    monkeypatch.setenv("DJANGO_FEATURE_FLAGS_ENVIRONMENTS", "development, staging, production, staging")
+
+    assert package_settings.configured_environment_keys() == ("development", "staging", "production")
