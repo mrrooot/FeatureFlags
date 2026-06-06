@@ -1,0 +1,80 @@
+{% extends "django_feature_flags/base.html" %}
+
+{% block content %}
+<header class="dff-header">
+  <div>
+    <p class="dff-kicker">{{ style_name }}</p>
+    <h1>Create flag</h1>
+    <p class="dff-subtitle">Define the first default value and attach the flag to project environments.</p>
+  </div>
+  <div class="dff-actions">
+    <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:flag_list' %}">Back to flags</a>
+  </div>
+</header>
+
+<section class="dff-form-layout">
+  <form class="dff-panel dff-form" method="post">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+    <div class="dff-alert dff-alert-error">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="dff-form-grid">
+      <div class="dff-field">
+        <label for="{{ form.project.id_for_label }}">Project</label>
+        {{ form.project }}
+        {{ form.project.errors }}
+      </div>
+      <div class="dff-field">
+        <label for="{{ form.key.id_for_label }}">Flag key</label>
+        {{ form.key }}
+        {% if form.key.help_text %}<small>{{ form.key.help_text }}</small>{% endif %}
+        {{ form.key.errors }}
+      </div>
+      <div class="dff-field">
+        <label for="{{ form.name.id_for_label }}">Display name</label>
+        {{ form.name }}
+        {{ form.name.errors }}
+      </div>
+      <div class="dff-field">
+        <label for="{{ form.value_type.id_for_label }}">Value type</label>
+        {{ form.value_type }}
+        {{ form.value_type.errors }}
+      </div>
+      <div class="dff-field dff-field-full">
+        <label for="{{ form.description.id_for_label }}">Description</label>
+        {{ form.description }}
+        {{ form.description.errors }}
+      </div>
+      <div class="dff-field dff-field-full">
+        <label for="{{ form.default_value.id_for_label }}">Default value</label>
+        {{ form.default_value }}
+        {% if form.default_value.help_text %}<small>{{ form.default_value.help_text }}</small>{% endif %}
+        {{ form.default_value.errors }}
+      </div>
+      <fieldset class="dff-field dff-field-full">
+        <legend>Environments</legend>
+        <div class="dff-checkbox-list">{{ form.environments }}</div>
+        {{ form.environments.errors }}
+      </fieldset>
+    </div>
+
+    <div class="dff-form-actions">
+      <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:flag_list' %}">Cancel</a>
+      <button class="dff-button dff-button-primary" type="submit">Create flag</button>
+    </div>
+  </form>
+
+  <aside class="dff-panel dff-side-panel">
+    <p class="dff-kicker">Defaults</p>
+    <h2>Created safely off</h2>
+    <p>The new flag gets one default variation and disabled states for the environments you select.</p>
+    <div class="dff-side-list">
+      <span>Project scoped key</span>
+      <span>Default variation</span>
+      <span>Disabled rollout states</span>
+    </div>
+  </aside>
+</section>
+{% endblock %}

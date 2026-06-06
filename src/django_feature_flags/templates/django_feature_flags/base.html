@@ -21,6 +21,13 @@
     </nav>
   </aside>
   <main class="dff-main">
+    {% if messages %}
+    <div class="dff-messages">
+      {% for message in messages %}
+      <div class="dff-alert dff-alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
     {% block content %}{% endblock %}
   </main>
 </body>

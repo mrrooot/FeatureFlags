@@ -5,6 +5,11 @@
   <div>
     <p class="dff-kicker">{{ style_name }}</p>
     <h1>Control Center</h1>
+    <p class="dff-subtitle">Create, review, and ship feature changes from your Django admin surface.</p>
+  </div>
+  <div class="dff-actions">
+    <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:flag_list' %}">View flags</a>
+    <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">+ New flag</a>
   </div>
 </header>
 <section class="dff-grid">
@@ -21,5 +26,48 @@
     <strong>Ready</strong>
   </article>
 </section>
+<section class="dff-section">
+  <div class="dff-section-header">
+    <div>
+      <p class="dff-kicker">Recent activity</p>
+      <h2>Latest flags</h2>
+    </div>
+  </div>
+  <div class="dff-panel dff-panel-flush">
+    {% if recent_flags %}
+    <table class="dff-table">
+      <thead>
+        <tr>
+          <th>Flag</th>
+          <th>Project</th>
+          <th>Type</th>
+          <th>State</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for flag in recent_flags %}
+        <tr>
+          <td><strong>{{ flag.key }}</strong><span>{{ flag.name }}</span></td>
+          <td>{{ flag.project.key }}</td>
+          <td><span class="dff-badge">{{ flag.value_type }}</span></td>
+          <td>
+            {% if flag.archived %}
+            <span class="dff-badge dff-badge-muted">Archived</span>
+            {% else %}
+            <span class="dff-badge dff-badge-success">Ready</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="dff-empty">
+      <strong>No flags yet</strong>
+      <span>Create the first flag and attach it to staging, production, or any project environment.</span>
+      <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">+ New flag</a>
+    </div>
+    {% endif %}
+  </div>
+</section>
 {% endblock %}
-
