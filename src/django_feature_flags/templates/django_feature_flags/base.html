@@ -19,10 +19,10 @@
     <nav class="dff-sidebar-nav">
       <a href="{% url 'django_feature_flags_dashboard:home' %}">Overview <span>Control</span></a>
       <a href="{% url 'django_feature_flags_dashboard:flag_list' %}">Flags <span>Ledger</span></a>
-      <a href="#">Segments <span>Ready</span></a>
-      <a href="#">Experiments <span>Live</span></a>
-      <a href="#">Approvals <span>Queue</span></a>
-      <a href="#">Audit <span>Trace</span></a>
+      <a href="{% url 'django_feature_flags_dashboard:segment_list' %}">Segments <span>Rules</span></a>
+      <a href="{% url 'django_feature_flags_dashboard:experiment_list' %}">Experiments <span>Live</span></a>
+      <a href="{% url 'django_feature_flags_dashboard:approval_list' %}">Approvals <span>Queue</span></a>
+      <a href="{% url 'django_feature_flags_dashboard:audit_list' %}">Audit <span>Trace</span></a>
     </nav>
     <div class="dff-sidebar-note">
       <span class="dff-kicker">Posture</span>

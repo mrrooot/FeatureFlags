@@ -4,7 +4,18 @@ from django import forms
 from django.db import transaction
 
 from django_feature_flags import settings as package_settings
-from django_feature_flags.models import Environment, FeatureFlag, FlagState, Project, Variation
+from django_feature_flags.audit.service import create_approval_request
+from django_feature_flags.models import (
+    Environment,
+    Experiment,
+    ExperimentAllocation,
+    FeatureFlag,
+    FlagState,
+    Project,
+    Segment,
+    SegmentRule,
+    Variation,
+)
 
 
 class FeatureFlagForm(forms.Form):
@@ -161,3 +172,263 @@ class FeatureFlagForm(forms.Form):
 
 
 FeatureFlagCreateForm = FeatureFlagForm
+
+
+class SegmentForm(forms.Form):
+    project = forms.ModelChoiceField(queryset=Project.objects.none())
+    key = forms.SlugField(max_length=120)
+    name = forms.CharField(max_length=180)
+    description = forms.CharField(required=False, widget=forms.Textarea(attrs={"rows": 3}))
+    conditions = forms.CharField(required=False, widget=forms.Textarea(attrs={"rows": 7}))
+    exclude = forms.BooleanField(required=False)
+
+    def __init__(self, *args, **kwargs):
+        self.instance = kwargs.pop("instance", None)
+        super().__init__(*args, **kwargs)
+        self.fields["project"].queryset = Project.objects.order_by("name")
+        self.fields["conditions"].help_text = 'JSON list, for example [{"attribute": "plan", "operator": "equals", "value": "pro"}].'
+        if self.instance:
+            rule = self.instance.rules.order_by("id").first()
+            self.initial.update(
+                {
+                    "project": self.instance.project,
+                    "key": self.instance.key,
+                    "name": self.instance.name,
+                    "description": self.instance.description,
+                    "conditions": json.dumps(rule.conditions if rule else [], sort_keys=True),
+                    "exclude": rule.exclude if rule else False,
+                }
+            )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        project = cleaned_data.get("project")
+        key = cleaned_data.get("key")
+        existing = Segment.objects.filter(project=project, key=key)
+        if self.instance:
+            existing = existing.exclude(pk=self.instance.pk)
+        if project and key and existing.exists():
+            self.add_error("key", "A segment with this key already exists in this project.")
+
+        try:
+            cleaned_data["parsed_conditions"] = self._parse_json_list(cleaned_data.get("conditions", ""), "conditions")
+        except ValueError as exc:
+            self.add_error("conditions", str(exc))
+        return cleaned_data
+
+    def save(self):
+        with transaction.atomic():
+            segment = self.instance or Segment()
+            segment.project = self.cleaned_data["project"]
+            segment.key = self.cleaned_data["key"]
+            segment.name = self.cleaned_data["name"]
+            segment.description = self.cleaned_data["description"]
+            segment.save()
+            rule = segment.rules.order_by("id").first()
+            if rule is None:
+                SegmentRule.objects.create(
+                    segment=segment,
+                    conditions=self.cleaned_data["parsed_conditions"],
+                    exclude=self.cleaned_data["exclude"],
+                )
+            else:
+                rule.conditions = self.cleaned_data["parsed_conditions"]
+                rule.exclude = self.cleaned_data["exclude"]
+                rule.save(update_fields=["conditions", "exclude"])
+                segment.rules.exclude(pk=rule.pk).delete()
+        return segment
+
+    def _parse_json_list(self, raw_value, field_name):
+        value = (raw_value or "").strip()
+        if not value:
+            return []
+        try:
+            parsed = json.loads(value)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"Use valid JSON for {field_name}.") from exc
+        if not isinstance(parsed, list):
+            raise ValueError(f"Use a JSON list for {field_name}.")
+        return parsed
+
+
+class ExperimentForm(forms.Form):
+    flag = forms.ModelChoiceField(queryset=FeatureFlag.objects.none())
+    key = forms.SlugField(max_length=120)
+    name = forms.CharField(max_length=180)
+    status = forms.ChoiceField(choices=Experiment.STATUSES)
+    config = forms.CharField(required=False, widget=forms.Textarea(attrs={"rows": 4}))
+    allocations = forms.CharField(widget=forms.Textarea(attrs={"rows": 7}))
+
+    def __init__(self, *args, **kwargs):
+        self.instance = kwargs.pop("instance", None)
+        super().__init__(*args, **kwargs)
+        self.fields["flag"].queryset = FeatureFlag.objects.select_related("project").order_by("project__name", "key")
+        self.fields["config"].help_text = "Optional JSON object for experiment settings."
+        self.fields["allocations"].help_text = 'JSON list, for example [{"variation": "control", "weight": 50000}]. Weights use 0-100000.'
+        if self.instance:
+            self.initial.update(
+                {
+                    "flag": self.instance.flag,
+                    "key": self.instance.key,
+                    "name": self.instance.name,
+                    "status": self.instance.status,
+                    "config": json.dumps(self.instance.config, sort_keys=True),
+                    "allocations": json.dumps(
+                        [
+                            {
+                                "variation": allocation.variation.key,
+                                "weight": allocation.weight,
+                                "holdout": allocation.holdout,
+                            }
+                            for allocation in self.instance.allocations.select_related("variation").order_by("id")
+                        ],
+                        sort_keys=True,
+                    ),
+                }
+            )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        flag = cleaned_data.get("flag")
+        key = cleaned_data.get("key")
+        existing = Experiment.objects.filter(flag=flag, key=key)
+        if self.instance:
+            existing = existing.exclude(pk=self.instance.pk)
+        if flag and key and existing.exists():
+            self.add_error("key", "An experiment with this key already exists for this flag.")
+
+        try:
+            cleaned_data["parsed_config"] = self._parse_json_object(cleaned_data.get("config", ""), "config")
+        except ValueError as exc:
+            self.add_error("config", str(exc))
+
+        if flag:
+            try:
+                cleaned_data["parsed_allocations"] = self._parse_allocations(
+                    flag,
+                    cleaned_data.get("allocations", ""),
+                )
+            except ValueError as exc:
+                self.add_error("allocations", str(exc))
+        return cleaned_data
+
+    def save(self):
+        with transaction.atomic():
+            experiment = self.instance or Experiment()
+            experiment.flag = self.cleaned_data["flag"]
+            experiment.key = self.cleaned_data["key"]
+            experiment.name = self.cleaned_data["name"]
+            experiment.status = self.cleaned_data["status"]
+            experiment.config = self.cleaned_data["parsed_config"]
+            experiment.save()
+            experiment.allocations.all().delete()
+            ExperimentAllocation.objects.bulk_create(
+                [
+                    ExperimentAllocation(
+                        experiment=experiment,
+                        variation=item["variation"],
+                        weight=item["weight"],
+                        holdout=item["holdout"],
+                    )
+                    for item in self.cleaned_data["parsed_allocations"]
+                ]
+            )
+        return experiment
+
+    def _parse_json_object(self, raw_value, field_name):
+        value = (raw_value or "").strip()
+        if not value:
+            return {}
+        try:
+            parsed = json.loads(value)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"Use valid JSON for {field_name}.") from exc
+        if not isinstance(parsed, dict):
+            raise ValueError(f"Use a JSON object for {field_name}.")
+        return parsed
+
+    def _parse_allocations(self, flag, raw_value):
+        value = (raw_value or "").strip()
+        if not value:
+            raise ValueError("Add at least one allocation.")
+        try:
+            parsed = json.loads(value)
+        except json.JSONDecodeError as exc:
+            raise ValueError("Use valid JSON for allocations.") from exc
+        if not isinstance(parsed, list) or not parsed:
+            raise ValueError("Use a non-empty JSON list for allocations.")
+
+        variations_by_key = {variation.key: variation for variation in flag.variations.all()}
+        allocations = []
+        seen_variations = set()
+        for item in parsed:
+            if not isinstance(item, dict):
+                raise ValueError("Each allocation must be a JSON object.")
+            variation_key = str(item.get("variation", "")).strip()
+            variation = variations_by_key.get(variation_key)
+            if variation is None:
+                raise ValueError(f"Variation {variation_key or '<missing>'} does not exist for this flag.")
+            if variation.key in seen_variations:
+                raise ValueError(f"Variation {variation.key} is allocated more than once.")
+            seen_variations.add(variation.key)
+            try:
+                weight = int(item.get("weight", 0))
+            except (TypeError, ValueError) as exc:
+                raise ValueError("Allocation weights must be numbers.") from exc
+            if weight < 0 or weight > 100000:
+                raise ValueError("Allocation weights must be between 0 and 100000.")
+            allocations.append(
+                {
+                    "variation": variation,
+                    "weight": weight,
+                    "holdout": bool(item.get("holdout", False)),
+                }
+            )
+        return allocations
+
+
+class ApprovalRequestForm(forms.Form):
+    environment = forms.ModelChoiceField(queryset=Environment.objects.none())
+    flag = forms.ModelChoiceField(queryset=FeatureFlag.objects.none())
+    reason = forms.CharField(required=False, widget=forms.Textarea(attrs={"rows": 3}))
+    proposed_change = forms.CharField(widget=forms.Textarea(attrs={"rows": 6}))
+
+    def __init__(self, *args, **kwargs):
+        self.requested_by = kwargs.pop("requested_by", None)
+        super().__init__(*args, **kwargs)
+        self.fields["environment"].queryset = Environment.objects.select_related("project").order_by("project__name", "name")
+        self.fields["flag"].queryset = FeatureFlag.objects.select_related("project").order_by("project__name", "key")
+        self.fields["proposed_change"].help_text = 'JSON object, for example {"enabled": true}.'
+
+    def clean(self):
+        cleaned_data = super().clean()
+        environment = cleaned_data.get("environment")
+        flag = cleaned_data.get("flag")
+        if environment and flag and environment.project_id != flag.project_id:
+            self.add_error("flag", "Choose a flag from the same project as the environment.")
+        try:
+            cleaned_data["parsed_proposed_change"] = self._parse_json_object(cleaned_data.get("proposed_change", ""))
+        except ValueError as exc:
+            self.add_error("proposed_change", str(exc))
+        return cleaned_data
+
+    def save(self):
+        return create_approval_request(
+            requested_by=self.requested_by,
+            environment=self.cleaned_data["environment"],
+            flag=self.cleaned_data["flag"],
+            proposed_change=self.cleaned_data["parsed_proposed_change"],
+            reason=self.cleaned_data["reason"],
+        )
+
+    def _parse_json_object(self, raw_value):
+        value = (raw_value or "").strip()
+        if not value:
+            raise ValueError("Use a JSON object for the proposed change.")
+        try:
+            parsed = json.loads(value)
+        except json.JSONDecodeError as exc:
+            raise ValueError("Use valid JSON for the proposed change.") from exc
+        if not isinstance(parsed, dict):
+            raise ValueError("Use a JSON object for the proposed change.")
+        return parsed

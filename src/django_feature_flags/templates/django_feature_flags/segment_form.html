@@ -1,0 +1,70 @@
+{% extends "django_feature_flags/base.html" %}
+
+{% block content %}
+<header class="dff-header">
+  <div>
+    <p class="dff-kicker">{{ style_name }} / {{ form_kicker }}</p>
+    <h1>{{ form_title }}</h1>
+    <p class="dff-subtitle">Define the audience identity and JSON conditions that targeting can evaluate.</p>
+  </div>
+  <div class="dff-actions">
+    <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:segment_list' %}">Back to segments</a>
+  </div>
+</header>
+
+<section class="dff-workflow-layout">
+  <form class="dff-panel dff-workflow-form" method="post">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+    <div class="dff-alert dff-alert-error">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="dff-form-grid">
+      <div class="dff-field">
+        <label for="{{ form.project.id_for_label }}">Project</label>
+        {{ form.project }}
+        {{ form.project.errors }}
+      </div>
+      <div class="dff-field dff-code-field">
+        <label for="{{ form.key.id_for_label }}">Segment key</label>
+        {{ form.key }}
+        {{ form.key.errors }}
+      </div>
+      <div class="dff-field dff-field-full">
+        <label for="{{ form.name.id_for_label }}">Name</label>
+        {{ form.name }}
+        {{ form.name.errors }}
+      </div>
+      <div class="dff-field dff-field-full">
+        <label for="{{ form.description.id_for_label }}">Description</label>
+        {{ form.description }}
+        {{ form.description.errors }}
+      </div>
+      <div class="dff-field dff-field-full dff-code-field">
+        <label for="{{ form.conditions.id_for_label }}">Conditions JSON</label>
+        {{ form.conditions }}
+        {% if form.conditions.help_text %}<small>{{ form.conditions.help_text }}</small>{% endif %}
+        {{ form.conditions.errors }}
+      </div>
+      <div class="dff-field dff-toggle-field dff-field-full">
+        <label for="{{ form.exclude.id_for_label }}">Exclude matching users</label>
+        {{ form.exclude }}
+        {{ form.exclude.errors }}
+      </div>
+    </div>
+
+    <div class="dff-form-actions">
+      <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:segment_list' %}">Cancel</a>
+      <button class="dff-button dff-button-primary" type="submit">{{ submit_label }}</button>
+    </div>
+  </form>
+
+  <aside class="dff-form-sidebar">
+    <section class="dff-panel dff-side-panel">
+      <p class="dff-kicker">Rule shape</p>
+      <h2>JSON conditions</h2>
+      <p>Each condition should describe an attribute, operator, and comparison value. Empty lists are valid for draft segments.</p>
+    </section>
+  </aside>
+</section>
+{% endblock %}

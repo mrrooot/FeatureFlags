@@ -1,0 +1,71 @@
+{% extends "django_feature_flags/base.html" %}
+
+{% block content %}
+<header class="dff-header">
+  <div>
+    <p class="dff-kicker">{{ style_name }} / Audit trace</p>
+    <h1>Audit trail</h1>
+    <p class="dff-subtitle">Search recent flag, approval, segment, and experiment changes.</p>
+  </div>
+</header>
+
+<form class="dff-panel dff-filter-bar" method="get">
+  <div class="dff-field">
+    <label for="id_action">Action contains</label>
+    <input id="id_action" name="action" value="{{ filters.action }}">
+  </div>
+  <div class="dff-field">
+    <label for="id_flag">Flag</label>
+    <select id="id_flag" name="flag">
+      <option value="">Any flag</option>
+      {% for flag in flags %}
+      <option value="{{ flag.id }}">{{ flag.project.key }} / {{ flag.key }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="dff-field">
+    <label for="id_environment">Environment</label>
+    <select id="id_environment" name="environment">
+      <option value="">Any environment</option>
+      {% for environment in environments %}
+      <option value="{{ environment.id }}">{{ environment.project.key }} / {{ environment.key }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button class="dff-button dff-button-primary" type="submit">Filter</button>
+</form>
+
+<section class="dff-panel dff-panel-flush">
+  {% if logs %}
+  <table class="dff-table dff-ledger-table">
+    <thead>
+      <tr>
+        <th>Action</th>
+        <th>Flag</th>
+        <th>Environment</th>
+        <th>Reason</th>
+        <th>When</th>
+        <th>Detail</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for log in logs %}
+      <tr>
+        <td><strong class="dff-code">{{ log.action }}</strong><span>{{ log.user|default:"System" }}</span></td>
+        <td>{% if log.flag %}<span class="dff-project-stamp">{{ log.flag.key }}</span>{% else %}<span class="dff-muted-text">None</span>{% endif %}</td>
+        <td>{% if log.environment %}<span class="dff-chip">{{ log.environment.key }}</span>{% else %}<span class="dff-muted-text">None</span>{% endif %}</td>
+        <td><span>{{ log.reason|default:"No reason" }}</span></td>
+        <td><span>{{ log.created_at }}</span></td>
+        <td><a class="dff-table-action" href="{% url 'django_feature_flags_dashboard:audit_detail' log.pk %}">View audit</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="dff-empty">
+    <strong>No audit entries</strong>
+    <span>Audit entries appear when services or approval reviews record changes.</span>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

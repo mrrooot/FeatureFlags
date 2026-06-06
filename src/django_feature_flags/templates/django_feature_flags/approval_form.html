@@ -1,0 +1,60 @@
+{% extends "django_feature_flags/base.html" %}
+
+{% block content %}
+<header class="dff-header">
+  <div>
+    <p class="dff-kicker">{{ style_name }} / {{ form_kicker }}</p>
+    <h1>{{ form_title }}</h1>
+    <p class="dff-subtitle">Request review for a proposed flag state change in a configured environment.</p>
+  </div>
+  <div class="dff-actions">
+    <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:approval_list' %}">Back to approvals</a>
+  </div>
+</header>
+
+<section class="dff-workflow-layout">
+  <form class="dff-panel dff-workflow-form" method="post">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+    <div class="dff-alert dff-alert-error">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="dff-form-grid">
+      <div class="dff-field">
+        <label for="{{ form.environment.id_for_label }}">Environment</label>
+        {{ form.environment }}
+        {{ form.environment.errors }}
+      </div>
+      <div class="dff-field">
+        <label for="{{ form.flag.id_for_label }}">Flag</label>
+        {{ form.flag }}
+        {{ form.flag.errors }}
+      </div>
+      <div class="dff-field dff-field-full">
+        <label for="{{ form.reason.id_for_label }}">Reason</label>
+        {{ form.reason }}
+        {{ form.reason.errors }}
+      </div>
+      <div class="dff-field dff-field-full dff-code-field">
+        <label for="{{ form.proposed_change.id_for_label }}">Proposed change JSON</label>
+        {{ form.proposed_change }}
+        {% if form.proposed_change.help_text %}<small>{{ form.proposed_change.help_text }}</small>{% endif %}
+        {{ form.proposed_change.errors }}
+      </div>
+    </div>
+
+    <div class="dff-form-actions">
+      <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:approval_list' %}">Cancel</a>
+      <button class="dff-button dff-button-primary" type="submit">{{ submit_label }}</button>
+    </div>
+  </form>
+
+  <aside class="dff-form-sidebar">
+    <section class="dff-panel dff-side-panel">
+      <p class="dff-kicker">Reviewable change</p>
+      <h2>Approval record</h2>
+      <p>Approved and rejected requests write audit entries with the reviewer and final status.</p>
+    </section>
+  </aside>
+</section>
+{% endblock %}

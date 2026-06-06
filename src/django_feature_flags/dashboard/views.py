@@ -1,9 +1,14 @@
+import json
+
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+from django.views.decorators.http import require_POST
 
-from django_feature_flags.dashboard.forms import FeatureFlagForm
-from django_feature_flags.models import FeatureFlag, Project
+from django_feature_flags.audit.service import create_audit_log
+from django_feature_flags.dashboard.forms import ApprovalRequestForm, ExperimentForm, FeatureFlagForm, SegmentForm
+from django_feature_flags.models import ApprovalRequest, AuditLog, Environment, Experiment, FeatureFlag, Project, Segment
 
 
 @staff_member_required(login_url="/accounts/login/")
@@ -88,6 +93,259 @@ def flag_update(request, pk):
             "form_kicker": "Flag console",
             "submit_label": "Update flag",
             "side_heading": "Current default",
+            "style_name": "Premium SaaS",
+        },
+    )
+
+
+@staff_member_required(login_url="/accounts/login/")
+def segment_list(request):
+    segments = Segment.objects.select_related("project").prefetch_related("rules").order_by("project__name", "key")
+    return render(
+        request,
+        "django_feature_flags/segment_list.html",
+        {
+            "segments": segments,
+            "style_name": "Premium SaaS",
+        },
+    )
+
+
+@staff_member_required(login_url="/accounts/login/")
+def segment_create(request):
+    if request.method == "POST":
+        form = SegmentForm(request.POST)
+        if form.is_valid():
+            segment = form.save()
+            messages.success(request, f"Segment {segment.key} was created.")
+            return redirect("django_feature_flags_dashboard:segment_list")
+    else:
+        form = SegmentForm()
+
+    return render(
+        request,
+        "django_feature_flags/segment_form.html",
+        {
+            "form": form,
+            "form_title": "Create segment",
+            "form_kicker": "Audience console",
+            "submit_label": "Create segment",
+            "style_name": "Premium SaaS",
+        },
+    )
+
+
+@staff_member_required(login_url="/accounts/login/")
+def segment_update(request, pk):
+    segment = get_object_or_404(Segment.objects.select_related("project").prefetch_related("rules"), pk=pk)
+    if request.method == "POST":
+        form = SegmentForm(request.POST, instance=segment)
+        if form.is_valid():
+            segment = form.save()
+            messages.success(request, f"Segment {segment.key} was updated.")
+            return redirect("django_feature_flags_dashboard:segment_list")
+    else:
+        form = SegmentForm(instance=segment)
+
+    return render(
+        request,
+        "django_feature_flags/segment_form.html",
+        {
+            "segment": segment,
+            "form": form,
+            "form_title": "Update segment",
+            "form_kicker": "Audience console",
+            "submit_label": "Update segment",
+            "style_name": "Premium SaaS",
+        },
+    )
+
+
+@staff_member_required(login_url="/accounts/login/")
+def experiment_list(request):
+    experiments = (
+        Experiment.objects.select_related("flag", "flag__project")
+        .prefetch_related("allocations__variation")
+        .order_by("flag__project__name", "key")
+    )
+    return render(
+        request,
+        "django_feature_flags/experiment_list.html",
+        {
+            "experiments": experiments,
+            "style_name": "Premium SaaS",
+        },
+    )
+
+
+@staff_member_required(login_url="/accounts/login/")
+def experiment_create(request):
+    if request.method == "POST":
+        form = ExperimentForm(request.POST)
+        if form.is_valid():
+            experiment = form.save()
+            messages.success(request, f"Experiment {experiment.key} was created.")
+            return redirect("django_feature_flags_dashboard:experiment_list")
+    else:
+        form = ExperimentForm()
+
+    return render(
+        request,
+        "django_feature_flags/experiment_form.html",
+        {
+            "form": form,
+            "form_title": "Create experiment",
+            "form_kicker": "Experiment console",
+            "submit_label": "Create experiment",
+            "style_name": "Premium SaaS",
+        },
+    )
+
+
+@staff_member_required(login_url="/accounts/login/")
+def experiment_update(request, pk):
+    experiment = get_object_or_404(
+        Experiment.objects.select_related("flag", "flag__project").prefetch_related("allocations__variation"),
+        pk=pk,
+    )
+    if request.method == "POST":
+        form = ExperimentForm(request.POST, instance=experiment)
+        if form.is_valid():
+            experiment = form.save()
+            messages.success(request, f"Experiment {experiment.key} was updated.")
+            return redirect("django_feature_flags_dashboard:experiment_list")
+    else:
+        form = ExperimentForm(instance=experiment)
+
+    return render(
+        request,
+        "django_feature_flags/experiment_form.html",
+        {
+            "experiment": experiment,
+            "form": form,
+            "form_title": "Update experiment",
+            "form_kicker": "Experiment console",
+            "submit_label": "Update experiment",
+            "style_name": "Premium SaaS",
+        },
+    )
+
+
+@staff_member_required(login_url="/accounts/login/")
+def approval_list(request):
+    approvals = (
+        ApprovalRequest.objects.select_related("environment", "environment__project", "flag", "requested_by", "reviewed_by")
+        .order_by("status", "-created_at")
+    )
+    return render(
+        request,
+        "django_feature_flags/approval_list.html",
+        {
+            "approvals": approvals,
+            "style_name": "Premium SaaS",
+        },
+    )
+
+
+@staff_member_required(login_url="/accounts/login/")
+def approval_create(request):
+    if request.method == "POST":
+        form = ApprovalRequestForm(request.POST, requested_by=request.user)
+        if form.is_valid():
+            approval = form.save()
+            messages.success(request, f"Approval request for {approval.flag.key} was created.")
+            return redirect("django_feature_flags_dashboard:approval_list")
+    else:
+        form = ApprovalRequestForm(requested_by=request.user)
+
+    return render(
+        request,
+        "django_feature_flags/approval_form.html",
+        {
+            "form": form,
+            "form_title": "Create approval request",
+            "form_kicker": "Approval queue",
+            "submit_label": "Create request",
+            "style_name": "Premium SaaS",
+        },
+    )
+
+
+def _review_approval(request, pk, status, action):
+    approval = get_object_or_404(
+        ApprovalRequest.objects.select_related("environment", "flag"),
+        pk=pk,
+    )
+    before = {"status": approval.status}
+    approval.status = status
+    approval.reviewed_by = request.user
+    approval.reviewed_at = timezone.now()
+    approval.save(update_fields=["status", "reviewed_by", "reviewed_at"])
+    create_audit_log(
+        user=request.user,
+        environment=approval.environment,
+        flag=approval.flag,
+        action=action,
+        before=before,
+        after={"status": approval.status},
+        reason=approval.reason,
+    )
+    messages.success(request, f"Approval request for {approval.flag.key} was {status}.")
+    return redirect("django_feature_flags_dashboard:approval_list")
+
+
+@staff_member_required(login_url="/accounts/login/")
+@require_POST
+def approval_approve(request, pk):
+    return _review_approval(request, pk, ApprovalRequest.APPROVED, "approval.approved")
+
+
+@staff_member_required(login_url="/accounts/login/")
+@require_POST
+def approval_reject(request, pk):
+    return _review_approval(request, pk, ApprovalRequest.REJECTED, "approval.rejected")
+
+
+@staff_member_required(login_url="/accounts/login/")
+def audit_list(request):
+    logs = AuditLog.objects.select_related("user", "environment", "flag").order_by("-created_at")
+    action = request.GET.get("action", "").strip()
+    flag_id = request.GET.get("flag", "").strip()
+    environment_id = request.GET.get("environment", "").strip()
+    if action:
+        logs = logs.filter(action__icontains=action)
+    if flag_id:
+        logs = logs.filter(flag_id=flag_id)
+    if environment_id:
+        logs = logs.filter(environment_id=environment_id)
+
+    return render(
+        request,
+        "django_feature_flags/audit_list.html",
+        {
+            "logs": logs[:100],
+            "filters": {
+                "action": action,
+                "flag": flag_id,
+                "environment": environment_id,
+            },
+            "flags": FeatureFlag.objects.order_by("project__name", "key"),
+            "environments": Environment.objects.order_by("project__name", "name"),
+            "style_name": "Premium SaaS",
+        },
+    )
+
+
+@staff_member_required(login_url="/accounts/login/")
+def audit_detail(request, pk):
+    log = get_object_or_404(AuditLog.objects.select_related("user", "environment", "flag"), pk=pk)
+    return render(
+        request,
+        "django_feature_flags/audit_detail.html",
+        {
+            "log": log,
+            "before_json": json.dumps(log.before, indent=2, sort_keys=True),
+            "after_json": json.dumps(log.after, indent=2, sort_keys=True),
             "style_name": "Premium SaaS",
         },
     )

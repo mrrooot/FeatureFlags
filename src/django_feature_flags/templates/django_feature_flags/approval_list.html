@@ -1,0 +1,62 @@
+{% extends "django_feature_flags/base.html" %}
+
+{% block content %}
+<header class="dff-header">
+  <div>
+    <p class="dff-kicker">{{ style_name }} / Approval queue</p>
+    <h1>Approvals</h1>
+    <p class="dff-subtitle">Create approval requests and review pending production changes.</p>
+  </div>
+  <div class="dff-actions">
+    <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:approval_create' %}">New request</a>
+  </div>
+</header>
+
+<section class="dff-panel dff-panel-flush">
+  {% if approvals %}
+  <table class="dff-table dff-ledger-table">
+    <thead>
+      <tr>
+        <th>Flag</th>
+        <th>Environment</th>
+        <th>Status</th>
+        <th>Reason</th>
+        <th>Review</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for approval in approvals %}
+      <tr>
+        <td><strong class="dff-code">{{ approval.flag.key }}</strong><span>{{ approval.flag.name }}</span></td>
+        <td><span class="dff-project-stamp">{{ approval.environment.key }}</span></td>
+        <td><span class="dff-status dff-status-stage">{{ approval.get_status_display }}</span></td>
+        <td><span>{{ approval.reason|default:"No reason supplied" }}</span></td>
+        <td>
+          {% if approval.status == "pending" %}
+          <div class="dff-inline-actions">
+            <form method="post" action="{% url 'django_feature_flags_dashboard:approval_approve' approval.pk %}">
+              {% csrf_token %}
+              <button class="dff-table-action" type="submit">Approve</button>
+            </form>
+            <form method="post" action="{% url 'django_feature_flags_dashboard:approval_reject' approval.pk %}">
+              {% csrf_token %}
+              <button class="dff-table-action dff-table-action-danger" type="submit">Reject</button>
+            </form>
+          </div>
+          {% else %}
+          <span class="dff-muted-text">Reviewed</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="dff-empty">
+    <strong>No approval requests</strong>
+    <span>Create a request for environments that need human review before rollout.</span>
+    <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:approval_create' %}">New request</a>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

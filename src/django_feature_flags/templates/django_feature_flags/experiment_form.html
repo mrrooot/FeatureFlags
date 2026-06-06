@@ -1,0 +1,71 @@
+{% extends "django_feature_flags/base.html" %}
+
+{% block content %}
+<header class="dff-header">
+  <div>
+    <p class="dff-kicker">{{ style_name }} / {{ form_kicker }}</p>
+    <h1>{{ form_title }}</h1>
+    <p class="dff-subtitle">Set experiment identity, status, configuration, and variation allocation weights.</p>
+  </div>
+  <div class="dff-actions">
+    <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:experiment_list' %}">Back to experiments</a>
+  </div>
+</header>
+
+<section class="dff-workflow-layout">
+  <form class="dff-panel dff-workflow-form" method="post">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+    <div class="dff-alert dff-alert-error">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <div class="dff-form-grid">
+      <div class="dff-field">
+        <label for="{{ form.flag.id_for_label }}">Flag</label>
+        {{ form.flag }}
+        {{ form.flag.errors }}
+      </div>
+      <div class="dff-field dff-code-field">
+        <label for="{{ form.key.id_for_label }}">Experiment key</label>
+        {{ form.key }}
+        {{ form.key.errors }}
+      </div>
+      <div class="dff-field">
+        <label for="{{ form.name.id_for_label }}">Name</label>
+        {{ form.name }}
+        {{ form.name.errors }}
+      </div>
+      <div class="dff-field">
+        <label for="{{ form.status.id_for_label }}">Status</label>
+        {{ form.status }}
+        {{ form.status.errors }}
+      </div>
+      <div class="dff-field dff-field-full dff-code-field">
+        <label for="{{ form.config.id_for_label }}">Config JSON</label>
+        {{ form.config }}
+        {% if form.config.help_text %}<small>{{ form.config.help_text }}</small>{% endif %}
+        {{ form.config.errors }}
+      </div>
+      <div class="dff-field dff-field-full dff-code-field">
+        <label for="{{ form.allocations.id_for_label }}">Allocations JSON</label>
+        {{ form.allocations }}
+        {% if form.allocations.help_text %}<small>{{ form.allocations.help_text }}</small>{% endif %}
+        {{ form.allocations.errors }}
+      </div>
+    </div>
+
+    <div class="dff-form-actions">
+      <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:experiment_list' %}">Cancel</a>
+      <button class="dff-button dff-button-primary" type="submit">{{ submit_label }}</button>
+    </div>
+  </form>
+
+  <aside class="dff-form-sidebar">
+    <section class="dff-panel dff-side-panel">
+      <p class="dff-kicker">Allocation scale</p>
+      <h2>0-100000</h2>
+      <p>Use variation keys from the selected flag. A 50/50 split is two allocations with 50000 weight each.</p>
+    </section>
+  </aside>
+</section>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "django_feature_flags/base.html" %}
+
+{% block content %}
+<header class="dff-header">
+  <div>
+    <p class="dff-kicker">{{ style_name }} / Audit trace</p>
+    <h1>{{ log.action }}</h1>
+    <p class="dff-subtitle">{{ log.reason|default:"No reason supplied" }}</p>
+  </div>
+  <div class="dff-actions">
+    <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:audit_list' %}">Back to audit</a>
+  </div>
+</header>
+
+<section class="dff-audit-detail">
+  <article class="dff-panel dff-json-panel">
+    <p class="dff-kicker">Before</p>
+    <pre>{{ before_json|safe }}</pre>
+  </article>
+  <article class="dff-panel dff-json-panel">
+    <p class="dff-kicker">After</p>
+    <pre>{{ after_json|safe }}</pre>
+  </article>
+</section>
+{% endblock %}

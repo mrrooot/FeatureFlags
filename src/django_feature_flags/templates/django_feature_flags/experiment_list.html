@@ -1,0 +1,55 @@
+{% extends "django_feature_flags/base.html" %}
+
+{% block content %}
+<header class="dff-header">
+  <div>
+    <p class="dff-kicker">{{ style_name }} / Experiment console</p>
+    <h1>Experiments</h1>
+    <p class="dff-subtitle">Manage experiment status and variation allocation weights for running flags.</p>
+  </div>
+  <div class="dff-actions">
+    <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:experiment_create' %}">New experiment</a>
+  </div>
+</header>
+
+<section class="dff-panel dff-panel-flush">
+  {% if experiments %}
+  <table class="dff-table dff-ledger-table">
+    <thead>
+      <tr>
+        <th>Experiment</th>
+        <th>Flag</th>
+        <th>Status</th>
+        <th>Allocations</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for experiment in experiments %}
+      <tr>
+        <td><strong class="dff-code">{{ experiment.key }}</strong><span>{{ experiment.name }}</span></td>
+        <td><span class="dff-project-stamp">{{ experiment.flag.key }}</span></td>
+        <td><span class="dff-status dff-status-stage">{{ experiment.get_status_display }}</span></td>
+        <td>
+          <div class="dff-chip-row">
+            {% for allocation in experiment.allocations.all %}
+            <span class="dff-chip">{{ allocation.variation.key }} {{ allocation.weight }}</span>
+            {% empty %}
+            <span class="dff-muted-text">No allocations</span>
+            {% endfor %}
+          </div>
+        </td>
+        <td><a class="dff-table-action" href="{% url 'django_feature_flags_dashboard:experiment_update' experiment.pk %}">Edit experiment</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="dff-empty">
+    <strong>No experiments running</strong>
+    <span>Create an experiment and allocate flag variations using 0-100000 weights.</span>
+    <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:experiment_create' %}">New experiment</a>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

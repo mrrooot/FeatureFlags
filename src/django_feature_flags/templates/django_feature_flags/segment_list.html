@@ -1,0 +1,63 @@
+{% extends "django_feature_flags/base.html" %}
+
+{% block content %}
+<header class="dff-header">
+  <div>
+    <p class="dff-kicker">{{ style_name }} / Audience console</p>
+    <h1>Segments</h1>
+    <p class="dff-subtitle">Build reusable audience rules for targeting, exclusions, and rollout decisions.</p>
+  </div>
+  <div class="dff-actions">
+    <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:segment_create' %}">New segment</a>
+  </div>
+</header>
+
+<section class="dff-panel dff-panel-flush">
+  {% if segments %}
+  <table class="dff-table dff-ledger-table">
+    <thead>
+      <tr>
+        <th>Segment</th>
+        <th>Project</th>
+        <th>Rules</th>
+        <th>Mode</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for segment in segments %}
+      <tr>
+        <td><strong class="dff-code">{{ segment.key }}</strong><span>{{ segment.name }}</span></td>
+        <td><span class="dff-project-stamp">{{ segment.project.key }}</span></td>
+        <td>
+          {% for rule in segment.rules.all %}
+          <span class="dff-status dff-status-stage">{{ rule.conditions|length }} conditions</span>
+          {% empty %}
+          <span class="dff-muted-text">No rules</span>
+          {% endfor %}
+        </td>
+        <td>
+          {% for rule in segment.rules.all %}
+          {% if rule.exclude %}
+          <span class="dff-status dff-status-off">Exclude</span>
+          {% else %}
+          <span class="dff-status dff-status-live">Include</span>
+          {% endif %}
+          {% empty %}
+          <span class="dff-status dff-status-archived">Draft</span>
+          {% endfor %}
+        </td>
+        <td><a class="dff-table-action" href="{% url 'django_feature_flags_dashboard:segment_update' segment.pk %}">Edit segment</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="dff-empty">
+    <strong>No segments defined</strong>
+    <span>Create an audience segment and attach JSON conditions for targeting decisions.</span>
+    <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:segment_create' %}">New segment</a>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
