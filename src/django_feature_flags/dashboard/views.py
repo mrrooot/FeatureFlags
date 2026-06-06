@@ -17,6 +17,10 @@ def dashboard_home(request):
     context = {
         "project_count": Project.objects.count(),
         "flag_count": FeatureFlag.objects.count(),
+        "segment_count": Segment.objects.count(),
+        "experiment_count": Experiment.objects.count(),
+        "approval_count": ApprovalRequest.objects.filter(status=ApprovalRequest.PENDING).count(),
+        "audit_count": AuditLog.objects.count(),
         "recent_flags": flags,
         "style_name": "Premium SaaS",
     }
@@ -168,11 +172,23 @@ def experiment_list(request):
         .prefetch_related("allocations__variation")
         .order_by("flag__project__name", "key")
     )
+    experiment_rows = []
+    for experiment in experiments:
+        allocations = []
+        for allocation in experiment.allocations.all():
+            allocations.append(
+                {
+                    "allocation": allocation,
+                    "percent": allocation.weight / 1000,
+                }
+            )
+        experiment_rows.append({"experiment": experiment, "allocations": allocations})
     return render(
         request,
         "django_feature_flags/experiment_list.html",
         {
             "experiments": experiments,
+            "experiment_rows": experiment_rows,
             "style_name": "Premium SaaS",
         },
     )

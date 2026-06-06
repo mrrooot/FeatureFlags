@@ -57,6 +57,34 @@
   </aside>
 </section>
 
+<section class="dff-command-map" aria-label="Release workflow modules">
+  <a class="dff-panel dff-command-card dff-command-card-flags" href="{% url 'django_feature_flags_dashboard:flag_list' %}">
+    <span class="dff-command-code">FLAG</span>
+    <strong>{{ flag_count }}</strong>
+    <small>Decision ledger</small>
+  </a>
+  <a class="dff-panel dff-command-card dff-command-card-segments" href="{% url 'django_feature_flags_dashboard:segment_list' %}">
+    <span class="dff-command-code">SEG</span>
+    <strong>{{ segment_count }}</strong>
+    <small>Audience rules</small>
+  </a>
+  <a class="dff-panel dff-command-card dff-command-card-experiments" href="{% url 'django_feature_flags_dashboard:experiment_list' %}">
+    <span class="dff-command-code">EXP</span>
+    <strong>{{ experiment_count }}</strong>
+    <small>Allocation matrix</small>
+  </a>
+  <a class="dff-panel dff-command-card dff-command-card-approvals" href="{% url 'django_feature_flags_dashboard:approval_list' %}">
+    <span class="dff-command-code">REV</span>
+    <strong>{{ approval_count }}</strong>
+    <small>Pending approvals</small>
+  </a>
+  <a class="dff-panel dff-command-card dff-command-card-audit" href="{% url 'django_feature_flags_dashboard:audit_list' %}">
+    <span class="dff-command-code">LOG</span>
+    <strong>{{ audit_count }}</strong>
+    <small>Audit trace</small>
+  </a>
+</section>
+
 <section class="dff-metric-grid">
   <article class="dff-panel dff-metric-panel">
       <span class="dff-label">Projects</span>

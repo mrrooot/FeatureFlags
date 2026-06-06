@@ -12,8 +12,21 @@
   </div>
 </header>
 
+<section class="dff-ledger-primer">
+  <article class="dff-panel dff-primer-panel">
+    <span class="dff-label">Allocation matrix</span>
+    <strong>Weights</strong>
+    <p>Variation traffic weights render as compact bars so split balance can be scanned quickly.</p>
+  </article>
+  <article class="dff-panel dff-primer-panel dff-primer-panel-live">
+    <span class="dff-label">Experiment status</span>
+    <strong>Run state</strong>
+    <p>Draft, running, paused, and stopped states stay visible in the ledger row.</p>
+  </article>
+</section>
+
 <section class="dff-panel dff-panel-flush">
-  {% if experiments %}
+  {% if experiment_rows %}
   <table class="dff-table dff-ledger-table">
     <thead>
       <tr>
@@ -25,15 +38,20 @@
       </tr>
     </thead>
     <tbody>
-      {% for experiment in experiments %}
+      {% for row in experiment_rows %}
+      {% with experiment=row.experiment %}
       <tr>
         <td><strong class="dff-code">{{ experiment.key }}</strong><span>{{ experiment.name }}</span></td>
         <td><span class="dff-project-stamp">{{ experiment.flag.key }}</span></td>
         <td><span class="dff-status dff-status-stage">{{ experiment.get_status_display }}</span></td>
         <td>
-          <div class="dff-chip-row">
-            {% for allocation in experiment.allocations.all %}
-            <span class="dff-chip">{{ allocation.variation.key }} {{ allocation.weight }}</span>
+          <div class="dff-allocation-stack">
+            {% for item in row.allocations %}
+            <span class="dff-allocation-row">
+              <span class="dff-allocation-label">{{ item.allocation.variation.key }}</span>
+              <span class="dff-allocation-meter"><span style="width: {{ item.percent }}%;"></span></span>
+              <span class="dff-allocation-weight">{{ item.allocation.weight }}</span>
+            </span>
             {% empty %}
             <span class="dff-muted-text">No allocations</span>
             {% endfor %}
@@ -41,6 +59,7 @@
         </td>
         <td><a class="dff-table-action" href="{% url 'django_feature_flags_dashboard:experiment_update' experiment.pk %}">Edit experiment</a></td>
       </tr>
+      {% endwith %}
       {% endfor %}
     </tbody>
   </table>
