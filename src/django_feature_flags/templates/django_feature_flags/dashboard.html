@@ -1,37 +1,56 @@
 {% extends "django_feature_flags/base.html" %}
 
 {% block content %}
-<header class="dff-header">
+<header class="dff-header dff-command-header">
   <div>
-    <p class="dff-kicker">{{ style_name }}</p>
+    <p class="dff-kicker">{{ style_name }} / Editorial Ledger</p>
     <h1>Control Center</h1>
-    <p class="dff-subtitle">Create, review, and ship feature changes from your Django admin surface.</p>
+    <p class="dff-subtitle">A polished command desk for reviewing projects, flags, and release posture from your Django app.</p>
   </div>
   <div class="dff-actions">
-    <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:flag_list' %}">View flags</a>
-    <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">+ New flag</a>
+    <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:flag_list' %}">View ledger</a>
+    <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">New flag</a>
   </div>
 </header>
-<section class="dff-grid">
-  <article class="dff-panel">
-    <span class="dff-label">Projects</span>
-    <strong>{{ project_count }}</strong>
-  </article>
-  <article class="dff-panel">
-    <span class="dff-label">Flags</span>
-    <strong>{{ flag_count }}</strong>
-  </article>
-  <article class="dff-panel dff-panel-dark">
-    <span class="dff-label">Experiment health</span>
-    <strong>Ready</strong>
-  </article>
+
+<section class="dff-command-grid">
+  <div class="dff-kpi-grid">
+    <article class="dff-panel dff-kpi-card">
+      <span class="dff-label">Projects</span>
+      <strong>{{ project_count }}</strong>
+      <p>Workspaces currently registered for flag control.</p>
+    </article>
+    <article class="dff-panel dff-kpi-card">
+      <span class="dff-label">Flags</span>
+      <strong>{{ flag_count }}</strong>
+      <p>Feature decisions available to environments and SDKs.</p>
+    </article>
+    <article class="dff-panel dff-kpi-card dff-kpi-card-accent">
+      <span class="dff-label">Experiment health</span>
+      <strong>Ready</strong>
+      <p>Evaluation, events, and audit foundations are installed.</p>
+    </article>
+  </div>
+
+  <aside class="dff-panel dff-posture-panel">
+    <p class="dff-kicker">Release posture</p>
+    <h2>Controlled by default</h2>
+    <p>New flags start with explicit variations and environment states so production changes can be reviewed before rollout.</p>
+    <div class="dff-posture-list">
+      <span>Audit trail ready</span>
+      <span>Environment scoped</span>
+      <span>SDK key protected</span>
+    </div>
+  </aside>
 </section>
+
 <section class="dff-section">
   <div class="dff-section-header">
     <div>
       <p class="dff-kicker">Recent activity</p>
-      <h2>Latest flags</h2>
+      <h2>Latest flag ledger</h2>
     </div>
+    <a class="dff-link" href="{% url 'django_feature_flags_dashboard:flag_list' %}">Open all flags</a>
   </div>
   <div class="dff-panel dff-panel-flush">
     {% if recent_flags %}
@@ -63,9 +82,9 @@
     </table>
     {% else %}
     <div class="dff-empty">
-      <strong>No flags yet</strong>
+      <strong>No flags in the ledger</strong>
       <span>Create the first flag and attach it to staging, production, or any project environment.</span>
-      <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">+ New flag</a>
+      <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">New flag</a>
     </div>
     {% endif %}
   </div>
