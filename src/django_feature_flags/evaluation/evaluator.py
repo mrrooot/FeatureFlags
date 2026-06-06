@@ -38,6 +38,14 @@ def variation_result(flag_key, environment_key, variation, reason):
     )
 
 
+def tracked_result(environment, flag, variation, context, reason, track):
+    if track:
+        from django_feature_flags.events.service import record_evaluation
+
+        record_evaluation(environment, flag, variation, context, payload={"reason": reason})
+    return variation_result(flag.key, environment.key, variation, reason)
+
+
 def evaluate(flag_key, context, default=None, project_key="default", environment_key="production", track=False):
     project = Project.objects.filter(key=project_key).first()
     if project is None:
@@ -58,20 +66,20 @@ def evaluate(flag_key, context, default=None, project_key="default", environment
     if state.emergency_override.get("variation_key"):
         variation = flag.variations.filter(key=state.emergency_override["variation_key"]).first()
         if variation is not None:
-            return variation_result(flag.key, environment.key, variation, "emergency_override")
+            return tracked_result(environment, flag, variation, context, "emergency_override", track)
 
     if not state.enabled:
-        return variation_result(flag.key, environment.key, state.default_variation, "disabled")
+        return tracked_result(environment, flag, state.default_variation, context, "disabled", track)
 
     for rule in flag.targeting_rules.select_related("variation").order_by("priority", "id"):
         if conditions_match(context, rule.conditions):
-            return variation_result(flag.key, environment.key, rule.variation, "target_match")
+            return tracked_result(environment, flag, rule.variation, context, "target_match", track)
 
     rollout = state.rollout or {}
     if rollout.get("percentage") and rollout.get("variation_key"):
         if is_in_rollout(flag.key, context_key(context), rollout["percentage"], salt=environment.key):
             variation = flag.variations.filter(key=rollout["variation_key"]).first()
             if variation is not None:
-                return variation_result(flag.key, environment.key, variation, "rollout")
+                return tracked_result(environment, flag, variation, context, "rollout", track)
 
-    return variation_result(flag.key, environment.key, state.default_variation, "fallthrough")
+    return tracked_result(environment, flag, state.default_variation, context, "fallthrough", track)
