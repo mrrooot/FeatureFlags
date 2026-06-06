@@ -3,17 +3,17 @@
 {% block content %}
 <header class="dff-header">
   <div>
-    <p class="dff-kicker">{{ style_name }}</p>
-    <h1>Flags</h1>
-    <p class="dff-subtitle">Manage rollout defaults across projects and environments.</p>
+    <p class="dff-kicker">{{ style_name }} / Flag ledger</p>
+    <h1>Flag ledger</h1>
+    <p class="dff-subtitle">Scan rollout defaults, project ownership, and environment posture from one operational table.</p>
   </div>
   <div class="dff-actions">
-    <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">+ New flag</a>
+    <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">New flag</a>
   </div>
 </header>
 <section class="dff-panel dff-panel-flush">
   {% if flag_rows %}
-  <table class="dff-table">
+  <table class="dff-table dff-ledger-table">
     <thead>
       <tr>
         <th>Flag</th>
@@ -27,7 +27,7 @@
       {% for row in flag_rows %}
       <tr>
         <td><strong>{{ row.flag.key }}</strong><span>{{ row.flag.name }}</span></td>
-        <td>{{ row.flag.project.key }}</td>
+        <td><span class="dff-project-stamp">{{ row.flag.project.key }}</span></td>
         <td><span class="dff-badge">{{ row.flag.value_type }}</span></td>
         <td>
           <div class="dff-chip-row">
@@ -53,9 +53,9 @@
   </table>
   {% else %}
   <div class="dff-empty">
-    <strong>No flags yet</strong>
+    <strong>No flags in the ledger</strong>
     <span>Create a project flag, choose its environments, and the package will generate its default variation and states.</span>
-    <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">+ New flag</a>
+    <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">New flag</a>
   </div>
   {% endif %}
 </section>

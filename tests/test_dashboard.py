@@ -1,4 +1,5 @@
 import pytest
+from django.urls import reverse
 
 from django_feature_flags.models import Environment, FeatureFlag, FlagState, Project, Variation
 
@@ -90,3 +91,56 @@ def test_flag_list_shows_create_action(client, staff_user):
     assert response.status_code == 200
     assert b"New flag" in response.content
     assert b"/flags/flags/new/" in response.content
+
+
+@pytest.mark.django_db
+def test_overview_uses_editorial_ledger_workspace(client, staff_user):
+    project = Project.objects.create(key="ecommerce", name="Ecommerce")
+    environment = Environment.objects.create(project=project, key="production", name="Production")
+    flag = FeatureFlag.objects.create(project=project, key="new_checkout", name="New Checkout", value_type="boolean")
+    default = Variation.objects.create(flag=flag, key="default", name="Default", value=False, is_default=True)
+    FlagState.objects.create(flag=flag, environment=environment, enabled=True, default_variation=default)
+    client.force_login(staff_user)
+
+    response = client.get(reverse("django_feature_flags_dashboard:home"))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Editorial Ledger" in content
+    assert "Release posture" in content
+    assert "Latest flag ledger" in content
+    assert "new_checkout" in content
+
+
+@pytest.mark.django_db
+def test_flag_list_uses_ledger_language_and_status_stamps(client, staff_user):
+    project = Project.objects.create(key="ecommerce", name="Ecommerce")
+    staging = Environment.objects.create(project=project, key="staging", name="Staging")
+    flag = FeatureFlag.objects.create(project=project, key="recommendations", name="Recommendations", value_type="boolean")
+    default = Variation.objects.create(flag=flag, key="default", name="Default", value=False, is_default=True)
+    FlagState.objects.create(flag=flag, environment=staging, enabled=False, default_variation=default)
+    client.force_login(staff_user)
+
+    response = client.get(reverse("django_feature_flags_dashboard:flag_list"))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Flag ledger" in content
+    assert "Configured off" in content
+    assert "staging" in content
+    assert "Recommendations" in content
+
+
+@pytest.mark.django_db
+def test_create_flag_form_uses_guided_editorial_copy(client, staff_user):
+    project = Project.objects.create(key="ecommerce", name="Ecommerce")
+    Environment.objects.create(project=project, key="staging", name="Staging")
+    client.force_login(staff_user)
+
+    response = client.get(reverse("django_feature_flags_dashboard:flag_create"))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Setup ledger" in content
+    assert "Default variation" in content
+    assert "Safely off" in content
