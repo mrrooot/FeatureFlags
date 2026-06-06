@@ -12,79 +12,91 @@
   </div>
 </header>
 
-<section class="dff-form-layout">
-  <form class="dff-panel dff-form" method="post">
+<section class="dff-form-layout dff-release-console">
+  <form class="dff-panel dff-form dff-console-form" method="post">
     {% csrf_token %}
 
-    {% if form.non_field_errors %}
-    <div class="dff-alert dff-alert-error">{{ form.non_field_errors }}</div>
-    {% endif %}
-
-    <div class="dff-form-manifest" aria-label="Flag save path">
-      <span><strong>01</strong> Identity</span>
-      <span><strong>02</strong> Default value</span>
-      <span><strong>03</strong> .env sync</span>
+    <div class="dff-console-rail" aria-hidden="true">
+      <span>FF</span>
+      <small>Release console</small>
     </div>
 
-    <div class="dff-form-section">
-      <p class="dff-kicker">{{ form_kicker }}</p>
-      <h2>Flag identity</h2>
-      <div class="dff-form-grid">
-        <div class="dff-field">
-          <label for="{{ form.project.id_for_label }}">Project</label>
-          {{ form.project }}
-          {{ form.project.errors }}
+    <div class="dff-console-main">
+      {% if form.non_field_errors %}
+      <div class="dff-alert dff-alert-error">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      <div class="dff-form-manifest" aria-label="Flag save path">
+        <span><strong>01</strong> Identity lock</span>
+        <span><strong>02</strong> Default payload</span>
+        <span><strong>03</strong> .env sync</span>
+      </div>
+
+      <div class="dff-form-section dff-form-section-identity">
+        <div class="dff-section-heading">
+          <p class="dff-kicker">{{ form_kicker }}</p>
+          <h2>Flag identity</h2>
         </div>
-        <div class="dff-field dff-code-field">
-          <label for="{{ form.key.id_for_label }}">Flag key</label>
-          {{ form.key }}
-          {% if form.key.help_text %}<small>{{ form.key.help_text }}</small>{% endif %}
-          {{ form.key.errors }}
-        </div>
-        <div class="dff-field">
-          <label for="{{ form.name.id_for_label }}">Display name</label>
-          {{ form.name }}
-          {{ form.name.errors }}
-        </div>
-        <div class="dff-field">
-          <label for="{{ form.value_type.id_for_label }}">Value type</label>
-          {{ form.value_type }}
-          {{ form.value_type.errors }}
+        <div class="dff-form-grid">
+          <div class="dff-field">
+            <label for="{{ form.project.id_for_label }}">Project</label>
+            {{ form.project }}
+            {{ form.project.errors }}
+          </div>
+          <div class="dff-field dff-code-field dff-primary-field">
+            <label for="{{ form.key.id_for_label }}">Flag key</label>
+            {{ form.key }}
+            {% if form.key.help_text %}<small>{{ form.key.help_text }}</small>{% endif %}
+            {{ form.key.errors }}
+          </div>
+          <div class="dff-field">
+            <label for="{{ form.name.id_for_label }}">Display name</label>
+            {{ form.name }}
+            {{ form.name.errors }}
+          </div>
+          <div class="dff-field">
+            <label for="{{ form.value_type.id_for_label }}">Value type</label>
+            {{ form.value_type }}
+            {{ form.value_type.errors }}
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="dff-form-section">
-      <h2>Default variation</h2>
-      <div class="dff-form-grid">
-        <div class="dff-field dff-field-full">
-          <label for="{{ form.description.id_for_label }}">Description</label>
-          {{ form.description }}
-          {{ form.description.errors }}
+      <div class="dff-form-section">
+        <div class="dff-section-heading">
+          <p class="dff-kicker">Payload</p>
+          <h2>Default variation</h2>
         </div>
-        <div class="dff-field dff-field-full">
-          <label for="{{ form.default_value.id_for_label }}">Default value</label>
-          {{ form.default_value }}
-          {% if form.default_value.help_text %}<small>{{ form.default_value.help_text }}</small>{% endif %}
-          {{ form.default_value.errors }}
+        <div class="dff-form-grid">
+          <div class="dff-field dff-field-full">
+            <label for="{{ form.description.id_for_label }}">Description</label>
+            {{ form.description }}
+            {{ form.description.errors }}
+          </div>
+          <div class="dff-field dff-field-full dff-code-field">
+            <label for="{{ form.default_value.id_for_label }}">Default value</label>
+            {{ form.default_value }}
+            {% if form.default_value.help_text %}<small>{{ form.default_value.help_text }}</small>{% endif %}
+            {{ form.default_value.errors }}
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="dff-form-actions">
-      <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:flag_list' %}">Cancel</a>
-      <button class="dff-button dff-button-primary" type="submit">{{ submit_label }}</button>
+      <div class="dff-form-actions">
+        <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:flag_list' %}">Cancel</a>
+        <button class="dff-button dff-button-primary" type="submit">{{ submit_label }}</button>
+      </div>
     </div>
   </form>
 
-  <aside class="dff-form-sidebar">
-    <section class="dff-panel dff-side-panel dff-side-panel-paper">
+  <aside class="dff-form-sidebar dff-console-sidebar">
+    <section class="dff-panel dff-side-panel dff-side-panel-env">
       <p class="dff-kicker">Safe by default</p>
       <h2>{{ side_heading }}</h2>
-      <div class="dff-deployment-stamp" aria-hidden="true">
-        <span>ENV</span>
-        <strong>.env</strong>
-        <small>per deployment</small>
+      <div class="dff-env-signal" aria-hidden="true">
+        <span class="dff-env-node">ENV</span>
+        <span class="dff-env-line"></span>
+        <span class="dff-env-node dff-env-node-hot">OFF</span>
       </div>
       <p>The package creates or updates the default variation and keeps configured environment states disabled until rollout.</p>
       <div class="dff-side-list">
@@ -96,7 +108,7 @@
     </section>
     <section class="dff-panel dff-side-panel dff-side-panel-deployment">
       <p class="dff-kicker">Deployment managed</p>
-      <h2>Per deployment</h2>
+      <h2>.env control plane</h2>
       <p>Environment rows stay out of add and edit. They are configured automatically from your .env and synced as disabled states on save.</p>
     </section>
   </aside>
