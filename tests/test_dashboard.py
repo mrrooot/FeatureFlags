@@ -197,6 +197,26 @@ def test_overview_uses_release_observatory_workspace(client, staff_user):
 
 
 @pytest.mark.django_db
+def test_overview_surfaces_are_clickable_controls(client, staff_user):
+    project = Project.objects.create(key="ecommerce", name="Ecommerce")
+    flag = FeatureFlag.objects.create(project=project, key="new_checkout", name="New Checkout", value_type="boolean")
+    Variation.objects.create(flag=flag, key="default", name="Default", value=False, is_default=True)
+    client.force_login(staff_user)
+
+    response = client.get(reverse("django_feature_flags_dashboard:home"))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert 'href="#"' not in content
+    assert "dff-radar-link" in content
+    assert "dff-timeline-link" in content
+    assert reverse("django_feature_flags_dashboard:experiment_list") in content
+    assert reverse("django_feature_flags_dashboard:audit_list") in content
+    assert reverse("django_feature_flags_dashboard:approval_list") in content
+    assert reverse("django_feature_flags_dashboard:flag_update", kwargs={"pk": flag.pk}) in content
+
+
+@pytest.mark.django_db
 def test_flag_list_uses_ledger_language_and_status_stamps(client, staff_user):
     project = Project.objects.create(key="ecommerce", name="Ecommerce")
     staging = Environment.objects.create(project=project, key="staging", name="Staging")

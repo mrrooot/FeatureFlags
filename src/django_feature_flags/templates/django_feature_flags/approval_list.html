@@ -13,16 +13,16 @@
 </header>
 
 <section class="dff-ledger-primer">
-  <article class="dff-panel dff-primer-panel">
+  <a class="dff-panel dff-primer-panel" href="{% url 'django_feature_flags_dashboard:approval_create' %}">
     <span class="dff-label">Review queue</span>
     <strong>Human gate</strong>
     <p>Pending requests make risky environment changes explicit before they move into rollout.</p>
-  </article>
-  <article class="dff-panel dff-primer-panel dff-primer-panel-live">
+  </a>
+  <a class="dff-panel dff-primer-panel dff-primer-panel-live" href="{% url 'django_feature_flags_dashboard:audit_list' %}">
     <span class="dff-label">Audit write</span>
     <strong>Trace</strong>
     <p>Approve and reject actions write a review record into the audit trail automatically.</p>
-  </article>
+  </a>
 </section>
 
 <section class="dff-panel dff-panel-flush">

@@ -27,6 +27,78 @@
   box-sizing: border-box;
 }
 
+@keyframes dff-grid-drift {
+  from {
+    background-position: 0 0, 0 0;
+  }
+  to {
+    background-position: 42px 84px, 84px 42px;
+  }
+}
+
+@keyframes dff-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dff-radar-pulse {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: rotate(-14deg) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: rotate(-14deg) scale(1.035);
+  }
+}
+
+@keyframes dff-beam-scan {
+  0%,
+  100% {
+    opacity: 0.48;
+    transform: rotate(-19deg) translateX(-18px);
+  }
+  50% {
+    opacity: 1;
+    transform: rotate(-19deg) translateX(18px);
+  }
+}
+
+@keyframes dff-signal-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 14px rgba(113, 246, 188, 0.62);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(113, 246, 188, 0.92);
+  }
+}
+
+@keyframes dff-meter-flow {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 120px 0;
+  }
+}
+
+@keyframes dff-fill-bar {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -52,6 +124,7 @@ body::before {
     linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
   background-size: 42px 42px;
   mask-image: linear-gradient(180deg, #000, transparent 92%);
+  animation: dff-grid-drift 18s linear infinite;
 }
 
 .dff-sidebar {
@@ -234,6 +307,7 @@ body::before {
   align-items: flex-start;
   gap: 20px;
   margin-bottom: 24px;
+  animation: dff-rise-in 0.42s ease both;
 }
 
 .dff-kicker,
@@ -321,6 +395,10 @@ h3 {
   background: rgba(113, 246, 188, 0.08);
 }
 
+.dff-button:active {
+  transform: translateY(0);
+}
+
 .dff-button-primary {
   color: #1a1102;
   background: var(--dff-gold);
@@ -345,6 +423,7 @@ h3 {
     linear-gradient(135deg, rgba(255, 255, 255, 0.055), transparent 58%),
     var(--dff-panel);
   box-shadow: var(--dff-shadow);
+  animation: dff-rise-in 0.48s ease both;
 }
 
 .dff-panel-flush {
@@ -382,6 +461,7 @@ h3 {
   height: 230px;
   right: 38px;
   bottom: 56px;
+  animation: dff-radar-pulse 4.8s ease-in-out infinite;
 }
 
 .dff-radar-ring::before {
@@ -407,6 +487,7 @@ h3 {
   background: linear-gradient(90deg, transparent, rgba(113, 246, 188, 0.82), transparent);
   transform: rotate(-19deg);
   box-shadow: 0 0 22px rgba(113, 246, 188, 0.6);
+  animation: dff-beam-scan 3.6s ease-in-out infinite;
 }
 
 .dff-radar-node {
@@ -417,6 +498,20 @@ h3 {
   padding: 12px;
   background: rgba(5, 7, 10, 0.78);
   backdrop-filter: blur(12px);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.dff-radar-link:hover {
+  transform: translateY(-3px) scale(1.02);
+  border-color: var(--dff-line-strong);
+  background: rgba(7, 16, 20, 0.94);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32), 0 0 24px rgba(113, 246, 188, 0.18);
+}
+
+.dff-radar-link:active {
+  transform: translateY(-1px) scale(1.01);
 }
 
 .dff-radar-node strong,
@@ -507,6 +602,10 @@ h3 {
   text-transform: uppercase;
 }
 
+.dff-status-live {
+  animation: dff-signal-glow 3.8s ease-in-out infinite;
+}
+
 .dff-status-off {
   background: var(--dff-gold);
 }
@@ -580,6 +679,12 @@ h3 {
   box-shadow: 0 28px 70px rgba(0, 0, 0, 0.48);
 }
 
+.dff-command-card:active,
+.dff-click-panel:active,
+.dff-timeline-link:active {
+  transform: translateY(0);
+}
+
 .dff-command-card strong,
 .dff-command-card small,
 .dff-command-code {
@@ -637,9 +742,22 @@ h3 {
   align-content: space-between;
   gap: 16px;
   padding: 18px;
+  color: inherit;
+  text-decoration: none;
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.055), transparent),
     var(--dff-panel-strong);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.dff-primer-panel:hover {
+  transform: translateY(-2px);
+  border-color: var(--dff-line-strong);
+  box-shadow: 0 30px 76px rgba(0, 0, 0, 0.48);
+}
+
+.dff-primer-panel:active {
+  transform: translateY(0);
 }
 
 .dff-metric-panel strong,
@@ -708,7 +826,10 @@ h3 {
   width: 76%;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--dff-mint), var(--dff-gold));
+  background:
+    linear-gradient(90deg, var(--dff-mint), var(--dff-gold), var(--dff-mint));
+  background-size: 120px 100%;
+  animation: dff-meter-flow 2.8s linear infinite;
 }
 
 .dff-timeline-panel {
@@ -744,6 +865,9 @@ h3 {
   border-radius: 8px;
   padding: 12px;
   background: rgba(255, 255, 255, 0.045);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
 }
 
 .dff-timeline-event::before {
@@ -756,6 +880,12 @@ h3 {
   border-radius: 50%;
   background: var(--dff-mint);
   box-shadow: 0 0 14px rgba(113, 246, 188, 0.8);
+}
+
+.dff-timeline-link:hover {
+  transform: translateY(-2px);
+  border-color: var(--dff-line-strong);
+  background: rgba(113, 246, 188, 0.07);
 }
 
 .dff-timeline-event-off::before {
@@ -799,6 +929,18 @@ h3 {
 
 .dff-link:hover {
   color: var(--dff-gold);
+}
+
+.dff-click-panel {
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.dff-click-panel:hover {
+  transform: translateY(-2px);
+  border-color: var(--dff-line-strong);
+  box-shadow: 0 30px 76px rgba(0, 0, 0, 0.48);
 }
 
 .dff-table {
@@ -914,6 +1056,8 @@ h3 {
   border-radius: inherit;
   background: linear-gradient(90deg, var(--dff-mint), var(--dff-blue));
   box-shadow: 0 0 16px rgba(113, 246, 188, 0.42);
+  transform-origin: left center;
+  animation: dff-fill-bar 0.72s ease both;
 }
 
 .dff-code {
@@ -1636,5 +1780,16 @@ textarea:focus-visible {
   .dff-form-actions,
   .dff-button {
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
   }
 }

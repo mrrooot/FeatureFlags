@@ -13,16 +13,16 @@
 </header>
 
 <section class="dff-ledger-primer">
-  <article class="dff-panel dff-primer-panel">
+  <a class="dff-panel dff-primer-panel" href="{% url 'django_feature_flags_dashboard:flag_create' %}">
     <span class="dff-label">Scan mode</span>
     <strong>Flag keys</strong>
     <p>Monospace identifiers stay visually distinct from display names so release owners can compare technical values quickly.</p>
-  </article>
-  <article class="dff-panel dff-primer-panel dff-primer-panel-live">
+  </a>
+  <a class="dff-panel dff-primer-panel dff-primer-panel-live" href="{% url 'django_feature_flags_dashboard:approval_list' %}">
     <span class="dff-label">Environment posture</span>
     <strong>Live or off</strong>
     <p>Status stamps keep risky rollout states visible at the edge of each row.</p>
-  </article>
+  </a>
 </section>
 
 <section class="dff-panel dff-panel-flush">

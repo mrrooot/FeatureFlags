@@ -17,18 +17,18 @@
   <article class="dff-panel dff-radar-panel">
     <div class="dff-radar-ring"></div>
     <div class="dff-radar-beam"></div>
-    <div class="dff-radar-node dff-radar-node-prod">
+    <a class="dff-radar-node dff-radar-link dff-radar-node-prod" href="{% url 'django_feature_flags_dashboard:flag_list' %}">
       <strong>Production</strong>
       <span>Live decisions stay visible before rollout.</span>
-    </div>
-    <div class="dff-radar-node dff-radar-node-stage">
+    </a>
+    <a class="dff-radar-node dff-radar-link dff-radar-node-stage" href="{% url 'django_feature_flags_dashboard:approval_list' %}">
       <strong>Staging</strong>
       <span>Pending changes keep their safe default.</span>
-    </div>
-    <div class="dff-radar-node dff-radar-node-audit">
+    </a>
+    <a class="dff-radar-node dff-radar-link dff-radar-node-audit" href="{% url 'django_feature_flags_dashboard:audit_list' %}">
       <strong>Audit</strong>
       <span>Reviewable by default</span>
-    </div>
+    </a>
     <div class="dff-radar-copy">
       <p class="dff-kicker">Release posture</p>
       <h2>Every environment becomes visible before it becomes risky.</h2>
@@ -43,17 +43,17 @@
   </article>
 
   <aside class="dff-observatory-side">
-    <article class="dff-panel dff-metric-panel">
+    <a class="dff-panel dff-metric-panel dff-click-panel" href="{% url 'django_feature_flags_dashboard:experiment_list' %}">
       <span class="dff-label">Experiment health</span>
       <strong>Ready</strong>
       <div class="dff-meter"><span></span></div>
       <p>Evaluation, events, and audit foundations are installed.</p>
-    </article>
-    <article class="dff-panel dff-metric-panel dff-metric-panel-paper">
+    </a>
+    <a class="dff-panel dff-metric-panel dff-metric-panel-paper dff-click-panel" href="{% url 'django_feature_flags_dashboard:flag_create' %}">
       <span class="dff-label">Default posture</span>
       <strong>Off</strong>
       <p>New flag states stay disabled until a team intentionally rolls them out.</p>
-    </article>
+    </a>
   </aside>
 </section>
 
@@ -112,22 +112,22 @@
     <span class="dff-status dff-status-stage">Reviewable</span>
   </div>
   <div class="dff-timeline-strip">
-    <div class="dff-timeline-event dff-timeline-event-live">
+    <a class="dff-timeline-event dff-timeline-link dff-timeline-event-live" href="{% url 'django_feature_flags_dashboard:flag_create' %}">
       <strong>Default variations</strong>
       <span>Created with every new flag.</span>
-    </div>
-    <div class="dff-timeline-event dff-timeline-event-off">
+    </a>
+    <a class="dff-timeline-event dff-timeline-link dff-timeline-event-off" href="{% url 'django_feature_flags_dashboard:flag_list' %}">
       <strong>Safe states</strong>
       <span>Configured environments start off.</span>
-    </div>
-    <div class="dff-timeline-event dff-timeline-event-stage">
+    </a>
+    <a class="dff-timeline-event dff-timeline-link dff-timeline-event-stage" href="{% url 'django_feature_flags_dashboard:experiment_list' %}">
       <strong>SDK ready</strong>
       <span>Flags are available through environment keys.</span>
-    </div>
-    <div class="dff-timeline-event dff-timeline-event-archived">
+    </a>
+    <a class="dff-timeline-event dff-timeline-link dff-timeline-event-archived" href="{% url 'django_feature_flags_dashboard:audit_list' %}">
       <strong>Audit trail</strong>
       <span>State changes remain reviewable.</span>
-    </div>
+    </a>
   </div>
 </section>
 
@@ -149,6 +149,7 @@
           <th>Type</th>
           <th>Environments</th>
           <th>State</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody>
@@ -173,6 +174,7 @@
             <span class="dff-status dff-status-live">Ready</span>
             {% endif %}
           </td>
+          <td><a class="dff-table-action" href="{% url 'django_feature_flags_dashboard:flag_update' flag.pk %}">Open flag</a></td>
         </tr>
         {% endfor %}
       </tbody>

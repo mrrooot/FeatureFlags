@@ -10,16 +10,16 @@
 </header>
 
 <section class="dff-ledger-primer">
-  <article class="dff-panel dff-primer-panel">
+  <a class="dff-panel dff-primer-panel" href="{% url 'django_feature_flags_dashboard:audit_list' %}">
     <span class="dff-label">Trace mode</span>
     <strong>Search</strong>
     <p>Filter by action, flag, or environment to isolate the release signal you need.</p>
-  </article>
-  <article class="dff-panel dff-primer-panel dff-primer-panel-live">
+  </a>
+  <a class="dff-panel dff-primer-panel dff-primer-panel-live" href="{% url 'django_feature_flags_dashboard:approval_list' %}">
     <span class="dff-label">Diff view</span>
     <strong>Before / after</strong>
     <p>Open a trace record to inspect the stored state transition payloads.</p>
-  </article>
+  </a>
 </section>
 
 <form class="dff-panel dff-filter-bar" method="get">

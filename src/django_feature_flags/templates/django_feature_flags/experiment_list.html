@@ -13,16 +13,16 @@
 </header>
 
 <section class="dff-ledger-primer">
-  <article class="dff-panel dff-primer-panel">
+  <a class="dff-panel dff-primer-panel" href="{% url 'django_feature_flags_dashboard:experiment_create' %}">
     <span class="dff-label">Allocation matrix</span>
     <strong>Weights</strong>
     <p>Variation traffic weights render as compact bars so split balance can be scanned quickly.</p>
-  </article>
-  <article class="dff-panel dff-primer-panel dff-primer-panel-live">
+  </a>
+  <a class="dff-panel dff-primer-panel dff-primer-panel-live" href="{% url 'django_feature_flags_dashboard:flag_list' %}">
     <span class="dff-label">Experiment status</span>
     <strong>Run state</strong>
     <p>Draft, running, paused, and stopped states stay visible in the ledger row.</p>
-  </article>
+  </a>
 </section>
 
 <section class="dff-panel dff-panel-flush">

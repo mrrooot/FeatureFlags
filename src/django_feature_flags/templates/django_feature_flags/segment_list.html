@@ -13,16 +13,16 @@
 </header>
 
 <section class="dff-ledger-primer">
-  <article class="dff-panel dff-primer-panel">
+  <a class="dff-panel dff-primer-panel" href="{% url 'django_feature_flags_dashboard:segment_create' %}">
     <span class="dff-label">Audience signal</span>
     <strong>Rules</strong>
     <p>Segments store reusable condition sets that can become targeting inputs across release workflows.</p>
-  </article>
-  <article class="dff-panel dff-primer-panel dff-primer-panel-live">
+  </a>
+  <a class="dff-panel dff-primer-panel dff-primer-panel-live" href="{% url 'django_feature_flags_dashboard:flag_list' %}">
     <span class="dff-label">Match mode</span>
     <strong>In / out</strong>
     <p>Include and exclude modes stay visible before rules are attached to rollout logic.</p>
-  </article>
+  </a>
 </section>
 
 <section class="dff-panel dff-panel-flush">
