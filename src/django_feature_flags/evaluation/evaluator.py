@@ -75,6 +75,14 @@ def evaluate(flag_key, context, default=None, project_key="default", environment
         if conditions_match(context, rule.conditions):
             return tracked_result(environment, flag, rule.variation, context, "target_match", track)
 
+    from django_feature_flags.experiments.service import active_experiment_for_flag, choose_experiment_variation
+
+    experiment = active_experiment_for_flag(flag)
+    if experiment is not None:
+        variation = choose_experiment_variation(experiment, context)
+        if variation is not None:
+            return tracked_result(environment, flag, variation, context, "experiment", track)
+
     rollout = state.rollout or {}
     if rollout.get("percentage") and rollout.get("variation_key"):
         if is_in_rollout(flag.key, context_key(context), rollout["percentage"], salt=environment.key):
