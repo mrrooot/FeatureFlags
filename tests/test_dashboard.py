@@ -47,10 +47,12 @@ def test_staff_can_open_create_flag_form(client, staff_user, settings):
     assert response.status_code == 200
     assert b"Create flag" in response.content
     content = response.content.decode()
-    assert "Configured environments" in content
-    assert "development" in content
-    assert "staging" in content
-    assert "production" in content
+    assert "Deployment managed" in content
+    assert "configured automatically from your .env" in content
+    assert "Configured environments" not in content
+    assert "development" not in content
+    assert "staging" not in content
+    assert "production" not in content
     assert 'name="environments"' not in content
 
 
@@ -139,9 +141,11 @@ def test_staff_can_open_update_flag_form(client, staff_user, settings):
     assert response.status_code == 200
     content = response.content.decode()
     assert "Update flag" in content
-    assert "Configured environments" in content
-    assert "development" in content
-    assert "production" in content
+    assert "Deployment managed" in content
+    assert "configured automatically from your .env" in content
+    assert "Configured environments" not in content
+    assert "development" not in content
+    assert "production" not in content
     assert 'name="environments"' not in content
 
 
@@ -227,4 +231,6 @@ def test_create_flag_form_uses_guided_observatory_copy(client, staff_user, setti
     assert "Default variation" in content
     assert "Safe by default" in content
     assert "Project scoped key" in content
-    assert "Configured environments" in content
+    assert "Deployment managed" in content
+    assert "configured automatically from your .env" in content
+    assert "Configured environments" not in content

@@ -5,7 +5,7 @@
   <div>
     <p class="dff-kicker">{{ style_name }} / {{ form_kicker }}</p>
     <h1>{{ form_title }}</h1>
-    <p class="dff-subtitle">Define the flag identity, default value, and configured environment posture from one release console.</p>
+    <p class="dff-subtitle">Define the flag identity and default value. Environment states are configured automatically from your .env for each deployment.</p>
   </div>
   <div class="dff-actions">
     <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:flag_list' %}">Back to ledger</a>
@@ -19,6 +19,12 @@
     {% if form.non_field_errors %}
     <div class="dff-alert dff-alert-error">{{ form.non_field_errors }}</div>
     {% endif %}
+
+    <div class="dff-form-manifest" aria-label="Flag save path">
+      <span><strong>01</strong> Identity</span>
+      <span><strong>02</strong> Default value</span>
+      <span><strong>03</strong> .env sync</span>
+    </div>
 
     <div class="dff-form-section">
       <p class="dff-kicker">{{ form_kicker }}</p>
@@ -65,20 +71,6 @@
       </div>
     </div>
 
-    <div class="dff-form-section">
-      <p class="dff-kicker">Configured environments</p>
-      <h2>Environment scope</h2>
-      <div class="dff-env-grid">
-        {% for environment in form.configured_environments %}
-        <span class="dff-env-card">
-          <strong>{{ environment.key }}</strong>
-          <small>{{ environment.name }}</small>
-        </span>
-        {% endfor %}
-      </div>
-      <p class="dff-form-note">Loaded from <span>DJANGO_FEATURE_FLAGS_ENVIRONMENTS</span>. Missing project environments and disabled flag states are created automatically on save.</p>
-    </div>
-
     <div class="dff-form-actions">
       <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:flag_list' %}">Cancel</a>
       <button class="dff-button dff-button-primary" type="submit">{{ submit_label }}</button>
@@ -89,17 +81,23 @@
     <section class="dff-panel dff-side-panel dff-side-panel-paper">
       <p class="dff-kicker">Safe by default</p>
       <h2>{{ side_heading }}</h2>
+      <div class="dff-deployment-stamp" aria-hidden="true">
+        <span>ENV</span>
+        <strong>.env</strong>
+        <small>per deployment</small>
+      </div>
       <p>The package creates or updates the default variation and keeps configured environment states disabled until rollout.</p>
       <div class="dff-side-list">
         <span>Project scoped key</span>
-        <span>.env configured scope</span>
+        <span>Deployment managed</span>
+        <span>.env sourced states</span>
         <span>Disabled rollout states</span>
       </div>
     </section>
-    <section class="dff-panel dff-side-panel">
-      <p class="dff-kicker">Release checks</p>
-      <h2>Before rollout</h2>
-      <p>Review the project, flag key, default value, and configured environment scope before saving the release control.</p>
+    <section class="dff-panel dff-side-panel dff-side-panel-deployment">
+      <p class="dff-kicker">Deployment managed</p>
+      <h2>Per deployment</h2>
+      <p>Environment rows stay out of add and edit. They are configured automatically from your .env and synced as disabled states on save.</p>
     </section>
   </aside>
 </section>
