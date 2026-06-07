@@ -244,18 +244,21 @@
         <input id="track-events" type="checkbox" name="track_events"{% if targeting.track_events %} checked{% endif %}>
         <span>Track events</span>
       </label>
-      <label class="dff-field dff-field-compact" for="change-reason">
+    </div>
+
+    <div class="dff-save-bar" data-save-bar>
+      <div>
+        <strong>Unsaved changes</strong>
+        <span><span data-dirty-count>0</span> sections changed</span>
+      </div>
+      <label class="dff-field dff-save-reason" for="change-reason">
         <span>Change reason</span>
         <textarea id="change-reason" name="reason" rows="2"></textarea>
       </label>
-    </div>
-
-    <div class="dff-save-bar dff-targeting-actions" data-save-bar>
-      <div>
-        <strong>Unsaved changes</strong>
-        <span>Review and save targeting updates for {{ state.environment.key }}.</span>
+      <div class="dff-actions">
+        <a class="dff-button dff-button-secondary" href="{{ request.path }}?environment={{ state.environment.key }}">Discard</a>
+        <button class="dff-button dff-button-primary" type="submit">Save targeting</button>
       </div>
-      <button class="dff-button dff-button-primary" type="submit">Save targeting</button>
     </div>
   </section>
 

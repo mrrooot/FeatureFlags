@@ -2272,33 +2272,40 @@ textarea {
 
 .dff-save-bar {
   position: sticky;
-  bottom: 0;
+  bottom: 16px;
   z-index: 8;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  border-top: 1px solid var(--dff-line);
-  padding: 14px 18px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 -14px 32px rgba(15, 23, 42, 0.08);
-}
-
-.dff-save-bar div {
   display: grid;
-  gap: 3px;
+  grid-template-columns: minmax(160px, 1fr) minmax(220px, 420px) max-content;
+  gap: 12px;
+  align-items: end;
+  margin: 18px;
+  border: 1px solid var(--dff-line-strong);
+  border-radius: var(--dff-radius);
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--dff-shadow);
 }
 
-.dff-save-bar strong {
-  color: var(--dff-heading);
-  font-size: 13px;
+.dff-save-bar strong,
+.dff-save-bar span {
+  display: block;
 }
 
 .dff-save-bar span {
   color: var(--dff-muted);
   font-size: 12px;
-  font-weight: 600;
-  text-transform: none;
+}
+
+.dff-save-reason textarea {
+  min-height: 42px;
+}
+
+.dff-targeting-layout:not(.dff-is-dirty) .dff-save-bar {
+  border-color: var(--dff-line);
+}
+
+.dff-section-dirty {
+  background: linear-gradient(90deg, rgba(49, 92, 246, 0.05), transparent 32%);
 }
 
 .dff-targeting-preview {

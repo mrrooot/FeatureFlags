@@ -28,6 +28,22 @@
     }
   }
 
+  function markDirty(target) {
+    var form = target.closest("[data-targeting-form]");
+    if (!form) {
+      return;
+    }
+    form.classList.add("dff-is-dirty");
+    var section = target.closest(".dff-targeting-section");
+    if (section) {
+      section.classList.add("dff-section-dirty");
+    }
+    var countTarget = form.querySelector("[data-dirty-count]");
+    if (countTarget) {
+      countTarget.textContent = String(form.querySelectorAll(".dff-section-dirty").length);
+    }
+  }
+
   function addRow(button) {
     var type = button.getAttribute("data-add");
     var container = listFor(button);
@@ -40,6 +56,7 @@
     }
     clearEmptyState(container);
     container.appendChild(row);
+    markDirty(button);
     var firstControl = row.querySelector("input:not([type=hidden]), select, textarea");
     if (firstControl) {
       firstControl.focus();
@@ -49,6 +66,7 @@
   function removeRow(button) {
     var row = button.closest(".dff-builder-row, .dff-rule-block");
     if (row) {
+      markDirty(button);
       row.remove();
     }
   }
@@ -79,6 +97,16 @@
     var switcher = event.target.closest("[data-environment-switch]");
     if (switcher) {
       switchEnvironment(switcher);
+      return;
+    }
+    if (event.target.closest("[data-targeting-form]")) {
+      markDirty(event.target);
+    }
+  });
+
+  document.addEventListener("input", function (event) {
+    if (event.target.closest("[data-targeting-form]")) {
+      markDirty(event.target);
     }
   });
 })();

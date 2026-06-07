@@ -204,6 +204,26 @@ def test_flag_detail_renders_modern_targeting_workspace(client, staff_user):
 
 
 @pytest.mark.django_db
+def test_targeting_workspace_has_unsaved_change_save_bar(client, staff_user):
+    project = Project.objects.create(key="ecommerce", name="Ecommerce")
+    environment = Environment.objects.create(project=project, key="production", name="Production")
+    flag = FeatureFlag.objects.create(project=project, key="checkout", name="Checkout", value_type="boolean")
+    default = Variation.objects.create(flag=flag, key="default", name="Default", value=False, is_default=True)
+    FlagState.objects.create(flag=flag, environment=environment, enabled=False, default_variation=default)
+    client.force_login(staff_user)
+
+    response = client.get(reverse("django_feature_flags_dashboard:flag_detail", kwargs={"pk": flag.pk}))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert 'data-targeting-form' in content
+    assert 'data-save-bar' in content
+    assert 'data-dirty-count' in content
+    assert "Unsaved changes" in content
+    assert "Save targeting" in content
+
+
+@pytest.mark.django_db
 def test_flag_list_shows_create_action(client, staff_user):
     client.force_login(staff_user)
 
