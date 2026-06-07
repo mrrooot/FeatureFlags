@@ -1748,3 +1748,257 @@ textarea:focus-visible {
     transition-duration: 0.001ms !important;
   }
 }
+
+.dff-page-header,
+.dff-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.dff-page-header {
+  margin-bottom: 22px;
+}
+
+.dff-kicker {
+  margin: 0 0 6px;
+  color: var(--dff-accent-dark);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.dff-page-header h1,
+.dff-section-header h2 {
+  margin: 0;
+  color: var(--dff-heading);
+}
+
+.dff-page-header h1 {
+  font-size: 28px;
+  line-height: 1.15;
+}
+
+.dff-section-header h2 {
+  font-size: 16px;
+}
+
+.dff-subtitle {
+  max-width: 720px;
+  margin: 8px 0 0;
+  color: var(--dff-muted);
+  line-height: 1.5;
+}
+
+.dff-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dff-button,
+.dff-table-action,
+.dff-link {
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.dff-button {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: var(--dff-radius);
+  padding: 0 14px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.dff-button-primary {
+  background: var(--dff-accent);
+  color: #ffffff;
+}
+
+.dff-button-primary:hover {
+  background: var(--dff-accent-dark);
+}
+
+.dff-button-secondary {
+  border-color: var(--dff-line);
+  background: var(--dff-surface);
+  color: var(--dff-heading);
+}
+
+.dff-panel {
+  border: 1px solid var(--dff-line);
+  border-radius: var(--dff-radius);
+  background: var(--dff-surface);
+  box-shadow: var(--dff-shadow);
+}
+
+.dff-panel-flush {
+  overflow: hidden;
+}
+
+.dff-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.dff-metric-card {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--dff-line);
+  border-radius: var(--dff-radius);
+  padding: 16px;
+  background: var(--dff-surface);
+  color: inherit;
+  text-decoration: none;
+}
+
+.dff-metric-card span,
+.dff-metric-card small {
+  color: var(--dff-muted);
+}
+
+.dff-metric-card strong {
+  color: var(--dff-heading);
+  font-size: 28px;
+}
+
+.dff-dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 18px;
+}
+
+.dff-side-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.dff-panel > .dff-section-header,
+.dff-panel .dff-empty {
+  padding: 18px;
+}
+
+.dff-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.dff-table th,
+.dff-table td {
+  border-top: 1px solid var(--dff-line);
+  padding: 13px 16px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.dff-table thead th {
+  border-top: 0;
+  color: var(--dff-muted);
+  background: var(--dff-surface-muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.dff-table td strong,
+.dff-table td span {
+  display: block;
+}
+
+.dff-code {
+  font-family: var(--dff-font-code);
+  font-size: 12px;
+}
+
+.dff-status,
+.dff-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  border-radius: 999px;
+  padding: 0 9px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.dff-status-neutral,
+.dff-chip {
+  background: #eef2f7;
+  color: #334155;
+}
+
+.dff-status-live {
+  background: #dcfce7;
+  color: var(--dff-success);
+}
+
+.dff-status-off {
+  background: #fff7ed;
+  color: var(--dff-warning);
+}
+
+.dff-status-archived {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.dff-chip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.dff-muted-text {
+  color: var(--dff-muted);
+}
+
+.dff-table-action,
+.dff-link {
+  color: var(--dff-accent-dark);
+}
+
+.dff-empty {
+  display: grid;
+  gap: 8px;
+  color: var(--dff-muted);
+}
+
+.dff-empty strong {
+  color: var(--dff-heading);
+  font-size: 16px;
+}
+
+.dff-review-list,
+.dff-quick-actions {
+  display: grid;
+  gap: 8px;
+  padding: 0 18px 18px;
+}
+
+.dff-review-list a,
+.dff-quick-actions a {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--dff-line);
+  border-radius: var(--dff-radius);
+  padding: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.dff-review-list span {
+  color: var(--dff-muted);
+}

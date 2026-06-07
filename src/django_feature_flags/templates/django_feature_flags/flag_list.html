@@ -1,40 +1,27 @@
 {% extends "django_feature_flags/base.html" %}
 
 {% block content %}
-<header class="dff-header">
+<header class="dff-page-header">
   <div>
-    <p class="dff-kicker">{{ style_name }} / Release Observatory</p>
-    <h1>Flag ledger</h1>
-    <p class="dff-subtitle">Scan rollout defaults, project ownership, flag keys, and configured environment posture from one operational table.</p>
+    <p class="dff-kicker">Flags</p>
+    <h1>Feature flags</h1>
+    <p class="dff-subtitle">Open a flag to edit Targeting, Variations, Settings, and History.</p>
   </div>
   <div class="dff-actions">
-    <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">New flag</a>
+    <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">Create flag</a>
   </div>
 </header>
 
-<section class="dff-ledger-primer">
-  <a class="dff-panel dff-primer-panel" href="{% url 'django_feature_flags_dashboard:flag_create' %}">
-    <span class="dff-label">Scan mode</span>
-    <strong>Flag keys</strong>
-    <p>Monospace identifiers stay visually distinct from display names so release owners can compare technical values quickly.</p>
-  </a>
-  <a class="dff-panel dff-primer-panel dff-primer-panel-live" href="{% url 'django_feature_flags_dashboard:approval_list' %}">
-    <span class="dff-label">Environment posture</span>
-    <strong>Live or off</strong>
-    <p>Status stamps keep risky rollout states visible at the edge of each row.</p>
-  </a>
-</section>
-
 <section class="dff-panel dff-panel-flush">
   {% if flag_rows %}
-  <table class="dff-table dff-ledger-table">
+  <table class="dff-table dff-flag-table">
     <thead>
       <tr>
         <th>Flag</th>
         <th>Project</th>
         <th>Type</th>
         <th>Environments</th>
-        <th>Status</th>
+        <th>Targeting</th>
         <th>Action</th>
       </tr>
     </thead>
@@ -42,8 +29,8 @@
       {% for row in flag_rows %}
       <tr>
         <td><strong class="dff-code">{{ row.flag.key }}</strong><span>{{ row.flag.name }}</span></td>
-        <td><span class="dff-project-stamp">{{ row.flag.project.key }}</span></td>
-        <td><span class="dff-status dff-status-stage">{{ row.flag.value_type }}</span></td>
+        <td>{{ row.flag.project.key }}</td>
+        <td><span class="dff-status dff-status-neutral">{{ row.flag.value_type }}</span></td>
         <td>
           <div class="dff-chip-row">
             {% for state in row.states %}
@@ -57,23 +44,21 @@
           {% if row.flag.archived %}
           <span class="dff-status dff-status-archived">Archived</span>
           {% elif row.enabled_count %}
-          <span class="dff-status dff-status-live">{{ row.enabled_count }} enabled</span>
+          <span class="dff-status dff-status-live">{{ row.enabled_count }} on</span>
           {% else %}
           <span class="dff-status dff-status-off">Configured off</span>
           {% endif %}
         </td>
-        <td>
-          <a class="dff-table-action" href="{% url 'django_feature_flags_dashboard:flag_detail' row.flag.pk %}">Edit flag</a>
-        </td>
+        <td><a class="dff-table-action" href="{% url 'django_feature_flags_dashboard:flag_detail' row.flag.pk %}">Open</a></td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
   {% else %}
   <div class="dff-empty">
-    <strong>No flags in orbit</strong>
-    <span>Create a project flag and the package will generate its default variation plus disabled states for configured environments.</span>
-    <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">New flag</a>
+    <strong>No feature flags yet</strong>
+    <span>Create a flag and each configured environment will start safely off.</span>
+    <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">Create flag</a>
   </div>
   {% endif %}
 </section>
