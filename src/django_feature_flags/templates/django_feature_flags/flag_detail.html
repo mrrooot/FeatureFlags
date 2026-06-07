@@ -2,16 +2,21 @@
 {% load static %}
 
 {% block content %}
-<header class="dff-header dff-targeting-header">
+<header class="dff-page-header dff-flag-header">
   <div>
-    <p class="dff-kicker">{{ style_name }} / Targeting</p>
+    <p class="dff-kicker">{{ flag.project.key }} / {{ state.environment.key }}</p>
     <h1>{{ flag.name }}</h1>
     <p class="dff-subtitle">
-      <strong class="dff-code">{{ flag.key }}</strong> controls variation delivery for each selected context in
-      <strong>{{ state.environment.key }}</strong>.
+      <strong class="dff-code">{{ flag.key }}</strong>
+      controls variation delivery for selected contexts in this environment.
     </p>
   </div>
   <div class="dff-actions">
+    {% if state.enabled %}
+    <span class="dff-status dff-status-live">Targeting on</span>
+    {% else %}
+    <span class="dff-status dff-status-off">Targeting off</span>
+    {% endif %}
     <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:flag_update' flag.pk %}">Settings</a>
     <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:flag_list' %}">Back to flags</a>
   </div>
@@ -19,9 +24,9 @@
 
 <nav class="dff-tabbar" aria-label="Flag sections">
   <span class="dff-tab dff-tab-active" aria-current="page">Targeting</span>
-  <a class="dff-tab" href="{% url 'django_feature_flags_dashboard:flag_update' flag.pk %}">Settings</a>
   <span class="dff-tab dff-tab-disabled">Variations</span>
-  <span class="dff-tab dff-tab-disabled">Audit</span>
+  <a class="dff-tab" href="{% url 'django_feature_flags_dashboard:flag_update' flag.pk %}">Settings</a>
+  <span class="dff-tab dff-tab-disabled">History</span>
 </nav>
 
 <form class="dff-targeting-layout" method="post" data-targeting-form>
@@ -29,22 +34,31 @@
   <input type="hidden" name="environment" value="{{ state.environment.key }}">
 
   <section class="dff-panel dff-targeting-panel" aria-labelledby="targeting-form-heading">
-    <div class="dff-targeting-section dff-targeting-section-head">
+    <div class="dff-targeting-section dff-targeting-state">
       <div>
-        <span class="dff-label">Environment</span>
-        <h2 id="targeting-form-heading">{{ state.environment.name|default:state.environment.key }}</h2>
+        <span class="dff-label">Targeting</span>
+        <h2 id="targeting-form-heading">Targeting rules for {{ state.environment.name|default:state.environment.key }}</h2>
+        <p>If targeting is off, users receive the off variation and rules remain editable for later release.</p>
       </div>
-      <div class="dff-targeting-status">
-        <label for="targeting-environment">Environment</label>
+      <label class="dff-field dff-field-compact" for="targeting-environment">
+        <span>Environment</span>
         <select id="targeting-environment" name="targeting_environment_selector" data-environment-switch>
           {% for item in states %}
           <option value="{{ item.environment.key }}"{% if item.pk == state.pk %} selected{% endif %}>{{ item.environment.key }}</option>
           {% endfor %}
         </select>
-      </div>
+      </label>
       <label class="dff-toggle" for="targeting-enabled">
         <input id="targeting-enabled" type="checkbox" name="enabled"{% if state.enabled %} checked{% endif %}>
         <span>Targeting on</span>
+      </label>
+      <label class="dff-field dff-field-compact" for="off-variation">
+        <span>When targeting is off</span>
+        <select id="off-variation" name="off_variation">
+          {% for variation in variations %}
+          <option value="{{ variation.key }}"{% if targeting.off_variation == variation.key %} selected{% endif %}>{{ variation.key }}</option>
+          {% endfor %}
+        </select>
       </label>
     </div>
 
@@ -54,28 +68,11 @@
     </div>
     {% endif %}
 
-    <div class="dff-targeting-section">
-      <div class="dff-section-heading-row">
-        <div>
-          <span class="dff-label">When disabled</span>
-          <h2>Off variation</h2>
-        </div>
-      </div>
-      <label class="dff-field dff-field-compact" for="off-variation">
-        <span>Serve variation</span>
-        <select id="off-variation" name="off_variation">
-          {% for variation in variations %}
-          <option value="{{ variation.key }}"{% if targeting.off_variation == variation.key %} selected{% endif %}>{{ variation.key }}</option>
-          {% endfor %}
-        </select>
-      </label>
-    </div>
-
     <div class="dff-targeting-section" data-list="prerequisite">
       <div class="dff-section-heading-row">
         <div>
-          <span class="dff-label">Gates</span>
-          <h2>Prerequisites</h2>
+          <span class="dff-label">Prerequisites</span>
+          <h2>If all prerequisites pass</h2>
         </div>
         <button class="dff-button dff-button-secondary" type="button" data-add="prerequisite">Add prerequisite</button>
       </div>
@@ -143,8 +140,8 @@
     <div class="dff-targeting-section">
       <div class="dff-section-heading-row">
         <div>
-          <span class="dff-label">Audience library</span>
-          <h2>Segments</h2>
+          <span class="dff-label">Reusable audiences</span>
+          <h2>Segment rules</h2>
         </div>
       </div>
       <div class="dff-segment-strip" aria-label="Available segments">
@@ -159,14 +156,15 @@
     <div class="dff-targeting-section" data-list="rule">
       <div class="dff-section-heading-row">
         <div>
-          <span class="dff-label">Ordered clauses</span>
-          <h2>Rules</h2>
+          <span class="dff-label">Rules</span>
+          <h2>Custom rules</h2>
         </div>
         <button class="dff-button dff-button-secondary" type="button" data-add="rule">Add rule</button>
       </div>
       <div class="dff-builder-list" data-items="rule">
         {% for rule in targeting.rules %}
         <div class="dff-rule-block">
+          <div class="dff-rule-badge">Rule {{ forloop.counter }}</div>
           <input type="hidden" name="rule_index" value="{{ forloop.counter0 }}">
           <input type="hidden" name="rule_id_{{ forloop.counter0 }}" value="{{ rule.id }}">
           <div class="dff-rule-topline">
@@ -175,7 +173,7 @@
               <input id="rule-description-{{ forloop.counter0 }}" name="rule_description_{{ forloop.counter0 }}" value="{{ rule.description }}">
             </label>
             <label for="rule-serve-{{ forloop.counter0 }}">
-              <span>Serve</span>
+              <span>THEN serve</span>
               <select id="rule-serve-{{ forloop.counter0 }}" name="rule_serve_variation_key_{{ forloop.counter0 }}">
                 {% for variation in variations %}
                 <option value="{{ variation.key }}"{% if rule.serve.variation_key == variation.key %} selected{% endif %}>{{ variation.key }}</option>
@@ -184,6 +182,7 @@
             </label>
             <button class="dff-icon-button" type="button" data-remove aria-label="Remove rule">Remove</button>
           </div>
+          <div class="dff-rule-language">IF all clauses match</div>
           {% for clause in rule.clauses %}
           <div class="dff-clause-row">
             <input type="hidden" name="rule_clause_index_{{ forloop.parentloop.counter0 }}" value="{{ forloop.counter0 }}">
@@ -251,7 +250,11 @@
       </label>
     </div>
 
-    <div class="dff-form-actions dff-targeting-actions">
+    <div class="dff-save-bar dff-targeting-actions" data-save-bar>
+      <div>
+        <strong>Unsaved changes</strong>
+        <span>Review and save targeting updates for {{ state.environment.key }}.</span>
+      </div>
       <button class="dff-button dff-button-primary" type="submit">Save targeting</button>
     </div>
   </section>
@@ -259,7 +262,7 @@
   <aside class="dff-panel dff-targeting-preview" aria-labelledby="targeting-preview-heading">
     <div>
       <span class="dff-label">Evaluation check</span>
-      <h2 id="targeting-preview-heading">Preview</h2>
+      <h2 id="targeting-preview-heading">Preview evaluation</h2>
       <p class="dff-form-note">Multi-context JSON</p>
     </div>
     <label class="dff-field dff-field-compact" for="preview-context">
@@ -341,6 +344,7 @@
 
   <template data-template="rule">
     <div class="dff-rule-block">
+      <div class="dff-rule-badge">Rule</div>
       <input type="hidden" name="rule_index" value="__index__">
       <input type="hidden" name="rule_id___index__" value="rule-__index__">
       <div class="dff-rule-topline">
@@ -349,7 +353,7 @@
           <input id="rule-description-__index__" name="rule_description___index__">
         </label>
         <label for="rule-serve-__index__">
-          <span>Serve</span>
+          <span>THEN serve</span>
           <select id="rule-serve-__index__" name="rule_serve_variation_key___index__">
             {% for variation in variations %}
             <option value="{{ variation.key }}">{{ variation.key }}</option>
@@ -358,6 +362,7 @@
         </label>
         <button class="dff-icon-button" type="button" data-remove aria-label="Remove rule">Remove</button>
       </div>
+      <div class="dff-rule-language">IF all clauses match</div>
       <div class="dff-clause-row">
         <input type="hidden" name="rule_clause_index___index__" value="0">
         <label for="rule-clause-kind-__index__-0">
