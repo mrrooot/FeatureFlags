@@ -70,3 +70,17 @@ Content-Type: application/json
 ## Dashboard
 
 Staff users can open `/flags/` to manage the platform dashboard.
+
+## Dashboard Targeting
+
+Open `/flags/flags/`, choose a flag, and use the Targeting tab to configure one environment at a time. The dashboard supports targeting on/off state, off variation, prerequisites, individual targets across context kinds, segment clauses, custom rules, default variation, event tracking, approval-aware saves, and preview evaluation with multi-context JSON.
+
+Example preview context:
+
+```json
+{
+  "user": {"key": "user-123", "plan": "pro"},
+  "device": {"key": "phone-1", "platform": "ios"},
+  "organization": {"key": "org-9", "tier": "enterprise"}
+}
+```
