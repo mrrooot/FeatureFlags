@@ -32,7 +32,7 @@ def test_disabled_flag_returns_environment_default(flag_setup):
     result = evaluate("new_checkout", {"key": "user-1"}, default=True, project_key=project.key, environment_key=environment.key)
 
     assert result.value is False
-    assert result.reason == "disabled"
+    assert result.reason == "off"
 
 
 @pytest.mark.django_db
@@ -53,3 +53,86 @@ def test_targeting_rule_returns_matched_variation(flag_setup):
     assert result.value is True
     assert result.variation_key == "on"
     assert result.reason == "target_match"
+
+
+@pytest.mark.django_db
+def test_enabled_flag_uses_individual_multi_context_target(flag_setup):
+    project, environment, flag, off, on = flag_setup
+    state = flag.states.get(environment=environment)
+    state.enabled = True
+    state.targeting = {
+        "off_variation": off.key,
+        "targets": [{"context_kind": "organization", "variation_key": on.key, "values": ["org-9"]}],
+        "rules": [],
+        "fallthrough": {"variation_key": off.key},
+    }
+    state.save(update_fields=["enabled", "targeting"])
+
+    result = evaluate(
+        "new_checkout",
+        {"user": {"key": "user-1"}, "organization": {"key": "org-9"}},
+        default=False,
+        project_key=project.key,
+        environment_key=environment.key,
+    )
+
+    assert result.value is True
+    assert result.variation_key == on.key
+    assert result.reason == "target_match"
+    assert result.detail["context_kind"] == "organization"
+
+
+@pytest.mark.django_db
+def test_enabled_flag_uses_rule_match_from_device_platform(flag_setup):
+    project, environment, flag, off, on = flag_setup
+    state = flag.states.get(environment=environment)
+    state.enabled = True
+    state.targeting = {
+        "off_variation": off.key,
+        "targets": [],
+        "rules": [
+            {
+                "id": "ios-rule",
+                "description": "iOS devices",
+                "clauses": [
+                    {
+                        "context_kind": "device",
+                        "attribute": "platform",
+                        "operator": "in",
+                        "values": ["ios"],
+                        "negate": False,
+                    }
+                ],
+                "serve": {"variation_key": on.key},
+            }
+        ],
+        "fallthrough": {"variation_key": off.key},
+    }
+    state.save(update_fields=["enabled", "targeting"])
+
+    result = evaluate(
+        "new_checkout",
+        {"user": {"key": "user-1"}, "device": {"key": "phone-1", "platform": "ios"}},
+        default=False,
+        project_key=project.key,
+        environment_key=environment.key,
+    )
+
+    assert result.value is True
+    assert result.reason == "rule_match"
+    assert result.detail["rule_id"] == "ios-rule"
+
+
+@pytest.mark.django_db
+def test_disabled_flag_uses_off_variation_from_targeting(flag_setup):
+    project, environment, flag, off, on = flag_setup
+    state = flag.states.get(environment=environment)
+    state.enabled = False
+    state.targeting = {"off_variation": on.key, "fallthrough": {"variation_key": off.key}}
+    state.save(update_fields=["enabled", "targeting"])
+
+    result = evaluate("new_checkout", {"key": "user-1"}, default=False, project_key=project.key, environment_key=environment.key)
+
+    assert result.value is True
+    assert result.variation_key == on.key
+    assert result.reason == "off"
