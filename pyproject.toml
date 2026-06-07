@@ -25,6 +25,7 @@ where = ["src"]
 django_feature_flags = [
   "templates/django_feature_flags/*.html",
   "static/django_feature_flags/*.css",
+  "static/django_feature_flags/*.js",
 ]
 
 [tool.pytest.ini_options]

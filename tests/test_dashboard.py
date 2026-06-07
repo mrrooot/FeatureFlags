@@ -178,6 +178,29 @@ def test_flag_list_edit_action_opens_flag_detail(client, staff_user):
 
 
 @pytest.mark.django_db
+def test_flag_detail_renders_launchdarkly_style_targeting_sections(client, staff_user):
+    project = Project.objects.create(key="ecommerce", name="Ecommerce")
+    environment = Environment.objects.create(project=project, key="production", name="Production")
+    flag = FeatureFlag.objects.create(project=project, key="checkout", name="Checkout", value_type="boolean")
+    default = Variation.objects.create(flag=flag, key="default", name="Default", value=False, is_default=True)
+    FlagState.objects.create(flag=flag, environment=environment, enabled=False, default_variation=default)
+    client.force_login(staff_user)
+
+    response = client.get(reverse("django_feature_flags_dashboard:flag_detail", kwargs={"pk": flag.pk}))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Targeting" in content
+    assert "Off variation" in content
+    assert "Prerequisites" in content
+    assert "Individual targets" in content
+    assert "Rules" in content
+    assert "Default rule" in content
+    assert "Preview" in content
+    assert "targeting.js" in content
+
+
+@pytest.mark.django_db
 def test_flag_list_shows_create_action(client, staff_user):
     client.force_login(staff_user)
 

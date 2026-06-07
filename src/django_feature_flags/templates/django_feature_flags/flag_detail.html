@@ -1,19 +1,380 @@
 {% extends "django_feature_flags/base.html" %}
+{% load static %}
 
 {% block content %}
-<header class="dff-header">
+<header class="dff-header dff-targeting-header">
   <div>
     <p class="dff-kicker">{{ style_name }} / Targeting</p>
     <h1>{{ flag.name }}</h1>
-    <p class="dff-subtitle"><strong class="dff-code">{{ flag.key }}</strong> targeting for {{ state.environment.key }}.</p>
+    <p class="dff-subtitle">
+      <strong class="dff-code">{{ flag.key }}</strong> controls variation delivery for each selected context in
+      <strong>{{ state.environment.key }}</strong>.
+    </p>
+  </div>
+  <div class="dff-actions">
+    <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:flag_update' flag.pk %}">Settings</a>
+    <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:flag_list' %}">Back to flags</a>
   </div>
 </header>
 
-<form method="post">
+<nav class="dff-tabbar" aria-label="Flag sections">
+  <span class="dff-tab dff-tab-active" aria-current="page">Targeting</span>
+  <a class="dff-tab" href="{% url 'django_feature_flags_dashboard:flag_update' flag.pk %}">Settings</a>
+  <span class="dff-tab dff-tab-disabled">Variations</span>
+  <span class="dff-tab dff-tab-disabled">Audit</span>
+</nav>
+
+<form class="dff-targeting-layout" method="post" data-targeting-form>
   {% csrf_token %}
   <input type="hidden" name="environment" value="{{ state.environment.key }}">
-  <input type="hidden" name="off_variation" value="{{ state.default_variation.key }}">
-  <input type="hidden" name="fallthrough_variation_key" value="{{ state.default_variation.key }}">
-  <button type="submit">Save targeting</button>
+
+  <section class="dff-panel dff-targeting-panel" aria-labelledby="targeting-form-heading">
+    <div class="dff-targeting-section dff-targeting-section-head">
+      <div>
+        <span class="dff-label">Environment</span>
+        <h2 id="targeting-form-heading">{{ state.environment.name|default:state.environment.key }}</h2>
+      </div>
+      <div class="dff-targeting-status">
+        <label for="targeting-environment">Environment</label>
+        <select id="targeting-environment" name="targeting_environment_selector" data-environment-switch>
+          {% for item in states %}
+          <option value="{{ item.environment.key }}"{% if item.pk == state.pk %} selected{% endif %}>{{ item.environment.key }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <label class="dff-toggle" for="targeting-enabled">
+        <input id="targeting-enabled" type="checkbox" name="enabled"{% if state.enabled %} checked{% endif %}>
+        <span>Targeting on</span>
+      </label>
+    </div>
+
+    {% if form.errors %}
+    <div class="dff-alert dff-alert-error" role="alert">
+      {{ form.errors }}
+    </div>
+    {% endif %}
+
+    <div class="dff-targeting-section">
+      <div class="dff-section-heading-row">
+        <div>
+          <span class="dff-label">When disabled</span>
+          <h2>Off variation</h2>
+        </div>
+      </div>
+      <label class="dff-field dff-field-compact" for="off-variation">
+        <span>Serve variation</span>
+        <select id="off-variation" name="off_variation">
+          {% for variation in variations %}
+          <option value="{{ variation.key }}"{% if targeting.off_variation == variation.key %} selected{% endif %}>{{ variation.key }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </div>
+
+    <div class="dff-targeting-section" data-list="prerequisite">
+      <div class="dff-section-heading-row">
+        <div>
+          <span class="dff-label">Gates</span>
+          <h2>Prerequisites</h2>
+        </div>
+        <button class="dff-button dff-button-secondary" type="button" data-add="prerequisite">Add prerequisite</button>
+      </div>
+      <div class="dff-builder-list" data-items="prerequisite">
+        {% for item in targeting.prerequisites %}
+        <div class="dff-builder-row">
+          <input type="hidden" name="prerequisite_index" value="{{ forloop.counter0 }}">
+          <label for="prerequisite-flag-{{ forloop.counter0 }}">
+            <span>Flag</span>
+            <select id="prerequisite-flag-{{ forloop.counter0 }}" name="prerequisite_flag_key_{{ forloop.counter0 }}">
+              {% for candidate in available_flags %}
+              <option value="{{ candidate.key }}"{% if item.flag_key == candidate.key %} selected{% endif %}>{{ candidate.key }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label for="prerequisite-variation-{{ forloop.counter0 }}">
+            <span>Variation</span>
+            <input id="prerequisite-variation-{{ forloop.counter0 }}" name="prerequisite_variation_key_{{ forloop.counter0 }}" value="{{ item.variation_key }}">
+          </label>
+          <button class="dff-icon-button" type="button" data-remove aria-label="Remove prerequisite">Remove</button>
+        </div>
+        {% empty %}
+        <p class="dff-empty-state">No prerequisite flags configured.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="dff-targeting-section" data-list="target">
+      <div class="dff-section-heading-row">
+        <div>
+          <span class="dff-label">Direct matches</span>
+          <h2>Individual targets</h2>
+        </div>
+        <button class="dff-button dff-button-secondary" type="button" data-add="target">Add target</button>
+      </div>
+      <div class="dff-builder-list" data-items="target">
+        {% for item in targeting.targets %}
+        <div class="dff-builder-row dff-builder-row-wide">
+          <input type="hidden" name="target_index" value="{{ forloop.counter0 }}">
+          <label for="target-kind-{{ forloop.counter0 }}">
+            <span>Context</span>
+            <input id="target-kind-{{ forloop.counter0 }}" name="target_context_kind_{{ forloop.counter0 }}" value="{{ item.context_kind }}" list="targeting-context-kinds">
+          </label>
+          <label for="target-variation-{{ forloop.counter0 }}">
+            <span>Variation</span>
+            <select id="target-variation-{{ forloop.counter0 }}" name="target_variation_key_{{ forloop.counter0 }}">
+              {% for variation in variations %}
+              <option value="{{ variation.key }}"{% if item.variation_key == variation.key %} selected{% endif %}>{{ variation.key }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label class="dff-builder-grow" for="target-values-{{ forloop.counter0 }}">
+            <span>Keys</span>
+            <textarea id="target-values-{{ forloop.counter0 }}" name="target_values_{{ forloop.counter0 }}" rows="2">{% for value in item.values %}{{ value }}{% if not forloop.last %}
+{% endif %}{% endfor %}</textarea>
+          </label>
+          <button class="dff-icon-button" type="button" data-remove aria-label="Remove target">Remove</button>
+        </div>
+        {% empty %}
+        <p class="dff-empty-state">No individual context keys pinned.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="dff-targeting-section">
+      <div class="dff-section-heading-row">
+        <div>
+          <span class="dff-label">Audience library</span>
+          <h2>Segments</h2>
+        </div>
+      </div>
+      <div class="dff-segment-strip" aria-label="Available segments">
+        {% for segment in segments %}
+        <span>{{ segment.key }}</span>
+        {% empty %}
+        <span>No segments</span>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="dff-targeting-section" data-list="rule">
+      <div class="dff-section-heading-row">
+        <div>
+          <span class="dff-label">Ordered clauses</span>
+          <h2>Rules</h2>
+        </div>
+        <button class="dff-button dff-button-secondary" type="button" data-add="rule">Add rule</button>
+      </div>
+      <div class="dff-builder-list" data-items="rule">
+        {% for rule in targeting.rules %}
+        <div class="dff-rule-block">
+          <input type="hidden" name="rule_index" value="{{ forloop.counter0 }}">
+          <input type="hidden" name="rule_id_{{ forloop.counter0 }}" value="{{ rule.id }}">
+          <div class="dff-rule-topline">
+            <label for="rule-description-{{ forloop.counter0 }}">
+              <span>Rule name</span>
+              <input id="rule-description-{{ forloop.counter0 }}" name="rule_description_{{ forloop.counter0 }}" value="{{ rule.description }}">
+            </label>
+            <label for="rule-serve-{{ forloop.counter0 }}">
+              <span>Serve</span>
+              <select id="rule-serve-{{ forloop.counter0 }}" name="rule_serve_variation_key_{{ forloop.counter0 }}">
+                {% for variation in variations %}
+                <option value="{{ variation.key }}"{% if rule.serve.variation_key == variation.key %} selected{% endif %}>{{ variation.key }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <button class="dff-icon-button" type="button" data-remove aria-label="Remove rule">Remove</button>
+          </div>
+          {% for clause in rule.clauses %}
+          <div class="dff-clause-row">
+            <input type="hidden" name="rule_clause_index_{{ forloop.parentloop.counter0 }}" value="{{ forloop.counter0 }}">
+            <label for="rule-clause-kind-{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}">
+              <span>Context</span>
+              <input id="rule-clause-kind-{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}" name="rule_clause_context_kind_{{ forloop.parentloop.counter0 }}_{{ forloop.counter0 }}" value="{{ clause.context_kind }}" list="targeting-context-kinds">
+            </label>
+            <label for="rule-clause-attribute-{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}">
+              <span>Attribute</span>
+              <input id="rule-clause-attribute-{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}" name="rule_clause_attribute_{{ forloop.parentloop.counter0 }}_{{ forloop.counter0 }}" value="{{ clause.attribute }}">
+            </label>
+            <label for="rule-clause-operator-{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}">
+              <span>Operator</span>
+              <select id="rule-clause-operator-{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}" name="rule_clause_operator_{{ forloop.parentloop.counter0 }}_{{ forloop.counter0 }}">
+                <option value="equals"{% if clause.operator == "equals" %} selected{% endif %}>equals</option>
+                <option value="not_equals"{% if clause.operator == "not_equals" %} selected{% endif %}>not_equals</option>
+                <option value="in"{% if clause.operator == "in" %} selected{% endif %}>in</option>
+                <option value="not_in"{% if clause.operator == "not_in" %} selected{% endif %}>not_in</option>
+                <option value="contains"{% if clause.operator == "contains" %} selected{% endif %}>contains</option>
+                <option value="segment_match"{% if clause.operator == "segment_match" %} selected{% endif %}>segment_match</option>
+              </select>
+            </label>
+            <label for="rule-clause-values-{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}">
+              <span>Values</span>
+              <input id="rule-clause-values-{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}" name="rule_clause_values_{{ forloop.parentloop.counter0 }}_{{ forloop.counter0 }}" value="{{ clause.values|join:', ' }}">
+            </label>
+            <label class="dff-clause-negate" for="rule-clause-negate-{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}">
+              <input id="rule-clause-negate-{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}" type="checkbox" name="rule_clause_negate_{{ forloop.parentloop.counter0 }}_{{ forloop.counter0 }}"{% if clause.negate %} checked{% endif %}>
+              <span>Negate</span>
+            </label>
+          </div>
+          {% endfor %}
+        </div>
+        {% empty %}
+        <p class="dff-empty-state">No ordered targeting rules configured.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="dff-targeting-section">
+      <div class="dff-section-heading-row">
+        <div>
+          <span class="dff-label">Fallback</span>
+          <h2>Default rule</h2>
+        </div>
+      </div>
+      <label class="dff-field dff-field-compact" for="fallthrough-variation">
+        <span>Serve variation</span>
+        <select id="fallthrough-variation" name="fallthrough_variation_key">
+          {% for variation in variations %}
+          <option value="{{ variation.key }}"{% if targeting.fallthrough.variation_key == variation.key %} selected{% endif %}>{{ variation.key }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </div>
+
+    <div class="dff-targeting-section dff-targeting-final">
+      <label class="dff-toggle" for="track-events">
+        <input id="track-events" type="checkbox" name="track_events"{% if targeting.track_events %} checked{% endif %}>
+        <span>Track events</span>
+      </label>
+      <label class="dff-field dff-field-compact" for="change-reason">
+        <span>Change reason</span>
+        <textarea id="change-reason" name="reason" rows="2"></textarea>
+      </label>
+    </div>
+
+    <div class="dff-form-actions dff-targeting-actions">
+      <button class="dff-button dff-button-primary" type="submit">Save targeting</button>
+    </div>
+  </section>
+
+  <aside class="dff-panel dff-targeting-preview" aria-labelledby="targeting-preview-heading">
+    <div>
+      <span class="dff-label">Evaluation check</span>
+      <h2 id="targeting-preview-heading">Preview</h2>
+      <p class="dff-form-note">Multi-context JSON</p>
+    </div>
+    <label class="dff-field dff-field-compact" for="preview-context">
+      <span>Context payload</span>
+      <textarea id="preview-context" name="preview_context" rows="12">{"user":{"key":"user-123"},"device":{"key":"device-1","platform":"ios"}}</textarea>
+    </label>
+    <button class="dff-button dff-button-secondary" type="button" disabled>Preview</button>
+  </aside>
+
+  <datalist id="targeting-context-kinds">
+    <option value="user"></option>
+    <option value="organization"></option>
+    <option value="device"></option>
+    <option value="service"></option>
+    <option value="platform"></option>
+  </datalist>
+
+  <template data-template="prerequisite">
+    <div class="dff-builder-row">
+      <input type="hidden" name="prerequisite_index" value="__index__">
+      <label for="prerequisite-flag-__index__">
+        <span>Flag</span>
+        {% if available_flags %}
+        <select id="prerequisite-flag-__index__" name="prerequisite_flag_key___index__">
+          {% for candidate in available_flags %}
+          <option value="{{ candidate.key }}">{{ candidate.key }}</option>
+          {% endfor %}
+        </select>
+        {% else %}
+        <input id="prerequisite-flag-__index__" name="prerequisite_flag_key___index__">
+        {% endif %}
+      </label>
+      <label for="prerequisite-variation-__index__">
+        <span>Variation</span>
+        <input id="prerequisite-variation-__index__" name="prerequisite_variation_key___index__">
+      </label>
+      <button class="dff-icon-button" type="button" data-remove aria-label="Remove prerequisite">Remove</button>
+    </div>
+  </template>
+
+  <template data-template="target">
+    <div class="dff-builder-row dff-builder-row-wide">
+      <input type="hidden" name="target_index" value="__index__">
+      <label for="target-kind-__index__">
+        <span>Context</span>
+        <input id="target-kind-__index__" name="target_context_kind___index__" value="user" list="targeting-context-kinds">
+      </label>
+      <label for="target-variation-__index__">
+        <span>Variation</span>
+        <select id="target-variation-__index__" name="target_variation_key___index__">
+          {% for variation in variations %}
+          <option value="{{ variation.key }}">{{ variation.key }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="dff-builder-grow" for="target-values-__index__">
+        <span>Keys</span>
+        <textarea id="target-values-__index__" name="target_values___index__" rows="2"></textarea>
+      </label>
+      <button class="dff-icon-button" type="button" data-remove aria-label="Remove target">Remove</button>
+    </div>
+  </template>
+
+  <template data-template="rule">
+    <div class="dff-rule-block">
+      <input type="hidden" name="rule_index" value="__index__">
+      <input type="hidden" name="rule_id___index__" value="rule-__index__">
+      <div class="dff-rule-topline">
+        <label for="rule-description-__index__">
+          <span>Rule name</span>
+          <input id="rule-description-__index__" name="rule_description___index__">
+        </label>
+        <label for="rule-serve-__index__">
+          <span>Serve</span>
+          <select id="rule-serve-__index__" name="rule_serve_variation_key___index__">
+            {% for variation in variations %}
+            <option value="{{ variation.key }}">{{ variation.key }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <button class="dff-icon-button" type="button" data-remove aria-label="Remove rule">Remove</button>
+      </div>
+      <div class="dff-clause-row">
+        <input type="hidden" name="rule_clause_index___index__" value="0">
+        <label for="rule-clause-kind-__index__-0">
+          <span>Context</span>
+          <input id="rule-clause-kind-__index__-0" name="rule_clause_context_kind___index___0" value="user" list="targeting-context-kinds">
+        </label>
+        <label for="rule-clause-attribute-__index__-0">
+          <span>Attribute</span>
+          <input id="rule-clause-attribute-__index__-0" name="rule_clause_attribute___index___0">
+        </label>
+        <label for="rule-clause-operator-__index__-0">
+          <span>Operator</span>
+          <select id="rule-clause-operator-__index__-0" name="rule_clause_operator___index___0">
+            <option value="equals">equals</option>
+            <option value="not_equals">not_equals</option>
+            <option value="in">in</option>
+            <option value="not_in">not_in</option>
+            <option value="contains">contains</option>
+            <option value="segment_match">segment_match</option>
+          </select>
+        </label>
+        <label for="rule-clause-values-__index__-0">
+          <span>Values</span>
+          <input id="rule-clause-values-__index__-0" name="rule_clause_values___index___0">
+        </label>
+        <label class="dff-clause-negate" for="rule-clause-negate-__index__-0">
+          <input id="rule-clause-negate-__index__-0" type="checkbox" name="rule_clause_negate___index___0">
+          <span>Negate</span>
+        </label>
+      </div>
+    </div>
+  </template>
 </form>
+
+<script src="{% static 'django_feature_flags/targeting.js' %}"></script>
 {% endblock %}
