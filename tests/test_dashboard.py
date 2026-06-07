@@ -161,7 +161,20 @@ def test_flag_list_shows_update_action(client, staff_user):
     assert response.status_code == 200
     content = response.content.decode()
     assert "Edit flag" in content
-    assert reverse("django_feature_flags_dashboard:flag_update", kwargs={"pk": flag.pk}) in content
+    assert reverse("django_feature_flags_dashboard:flag_detail", kwargs={"pk": flag.pk}) in content
+
+
+@pytest.mark.django_db
+def test_flag_list_edit_action_opens_flag_detail(client, staff_user):
+    project = Project.objects.create(key="ecommerce", name="Ecommerce")
+    flag = FeatureFlag.objects.create(project=project, key="recommendations", name="Recommendations", value_type="boolean")
+    Variation.objects.create(flag=flag, key="default", name="Default", value=False, is_default=True)
+    client.force_login(staff_user)
+
+    response = client.get(reverse("django_feature_flags_dashboard:flag_list"))
+
+    assert response.status_code == 200
+    assert reverse("django_feature_flags_dashboard:flag_detail", kwargs={"pk": flag.pk}) in response.content.decode()
 
 
 @pytest.mark.django_db

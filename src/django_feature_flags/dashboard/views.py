@@ -2,12 +2,14 @@ import json
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
+from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from django_feature_flags.audit.service import create_audit_log
+from django_feature_flags.audit.service import create_approval_request, create_audit_log
 from django_feature_flags.dashboard.forms import ApprovalRequestForm, ExperimentForm, FeatureFlagForm, SegmentForm
+from django_feature_flags.dashboard.targeting_forms import TargetingDocumentForm
 from django_feature_flags.models import ApprovalRequest, AuditLog, Environment, Experiment, FeatureFlag, Project, Segment
 
 
@@ -73,6 +75,74 @@ def flag_create(request):
             "style_name": "Premium SaaS",
         },
     )
+
+
+@staff_member_required(login_url="/accounts/login/")
+def flag_detail(request, pk):
+    flag = get_object_or_404(
+        FeatureFlag.objects.select_related("project").prefetch_related("variations", "states__environment"),
+        pk=pk,
+    )
+    environment_key = request.POST.get("environment") or request.GET.get("environment")
+    states = list(flag.states.select_related("environment", "default_variation").order_by("environment__name"))
+    state = _selected_state(states, environment_key)
+
+    if request.method == "POST":
+        form = TargetingDocumentForm(flag=flag, environment=state.environment, state=state, data=request.POST)
+        if form.is_valid():
+            before = {"enabled": state.enabled, "targeting": state.targeting}
+            proposed_change = {"enabled": form.enabled, "targeting": form.cleaned_document}
+            if state.environment.requires_approval:
+                create_approval_request(
+                    requested_by=request.user,
+                    environment=state.environment,
+                    flag=flag,
+                    proposed_change=proposed_change,
+                    reason=form.cleaned_data.get("reason", ""),
+                )
+                messages.success(request, f"Approval request for {flag.key} targeting was created.")
+            else:
+                with transaction.atomic():
+                    state.enabled = form.enabled
+                    state.targeting = form.cleaned_document
+                    state.save(update_fields=["enabled", "targeting", "updated_at"])
+                    create_audit_log(
+                        user=request.user,
+                        environment=state.environment,
+                        flag=flag,
+                        action="flag.targeting.updated",
+                        before=before,
+                        after=proposed_change,
+                        reason=form.cleaned_data.get("reason", ""),
+                    )
+                messages.success(request, f"Targeting for {flag.key} was updated.")
+            return redirect(f"{request.path}?environment={state.environment.key}")
+    else:
+        form = TargetingDocumentForm(flag=flag, environment=state.environment, state=state)
+
+    return render(
+        request,
+        "django_feature_flags/flag_detail.html",
+        {
+            "flag": flag,
+            "states": states,
+            "state": state,
+            "form": form,
+            "targeting": form.initial_document(),
+            "variations": flag.variations.order_by("key"),
+            "available_flags": flag.project.flags.exclude(pk=flag.pk).order_by("key"),
+            "segments": flag.project.segments.order_by("key"),
+            "style_name": "Premium SaaS",
+        },
+    )
+
+
+def _selected_state(states, environment_key):
+    if environment_key:
+        for state in states:
+            if state.environment.key == environment_key:
+                return state
+    return states[0]
 
 
 @staff_member_required(login_url="/accounts/login/")

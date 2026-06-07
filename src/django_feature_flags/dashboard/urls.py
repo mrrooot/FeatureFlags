@@ -8,6 +8,7 @@ urlpatterns = [
     path("", views.dashboard_home, name="home"),
     path("flags/", views.flag_list, name="flag_list"),
     path("flags/new/", views.flag_create, name="flag_create"),
+    path("flags/<int:pk>/", views.flag_detail, name="flag_detail"),
     path("flags/<int:pk>/edit/", views.flag_update, name="flag_update"),
     path("segments/", views.segment_list, name="segment_list"),
     path("segments/new/", views.segment_create, name="segment_create"),

@@ -1,6 +1,8 @@
 import pytest
+from django.http import QueryDict
 from django.urls import reverse
 
+from django_feature_flags.dashboard.targeting_forms import TargetingDocumentForm
 from django_feature_flags.models import (
     ApprovalRequest,
     AuditLog,
@@ -8,6 +10,7 @@ from django_feature_flags.models import (
     Experiment,
     ExperimentAllocation,
     FeatureFlag,
+    FlagState,
     Project,
     Segment,
     SegmentRule,
@@ -210,11 +213,6 @@ def test_sidebar_links_to_full_workflows(client, staff_user):
     assert reverse("django_feature_flags_dashboard:audit_list") in content
 
 
-from django.http import QueryDict
-
-from django_feature_flags.dashboard.targeting_forms import TargetingDocumentForm
-
-
 @pytest.mark.django_db
 def test_targeting_document_form_builds_targets_rules_and_fallthrough():
     project = Project.objects.create(key="ecommerce", name="Ecommerce")
@@ -270,3 +268,60 @@ def test_targeting_document_form_requires_change_reason_when_environment_require
 
     assert form.is_valid() is False
     assert form.errors["reason"] == ["Change reason is required for this environment."]
+
+
+@pytest.mark.django_db
+def test_staff_can_save_targeting_document_from_flag_detail(client, staff_user):
+    project = Project.objects.create(key="ecommerce", name="Ecommerce")
+    environment = Environment.objects.create(project=project, key="production", name="Production")
+    flag = FeatureFlag.objects.create(project=project, key="checkout", name="Checkout", value_type="boolean")
+    off = Variation.objects.create(flag=flag, key="off", value=False, is_default=True)
+    on = Variation.objects.create(flag=flag, key="on", value=True)
+    state = FlagState.objects.create(flag=flag, environment=environment, enabled=False, default_variation=off)
+    client.force_login(staff_user)
+
+    response = client.post(
+        reverse("django_feature_flags_dashboard:flag_detail", kwargs={"pk": flag.pk}),
+        {
+            "environment": environment.key,
+            "enabled": "on",
+            "off_variation": off.key,
+            "target_index": ["0"],
+            "target_context_kind_0": "user",
+            "target_variation_key_0": on.key,
+            "target_values_0": "user-1",
+            "fallthrough_variation_key": off.key,
+        },
+    )
+
+    assert response.status_code == 302
+    state.refresh_from_db()
+    assert state.enabled is True
+    assert state.targeting["targets"][0]["values"] == ["user-1"]
+    assert AuditLog.objects.filter(action="flag.targeting.updated", flag=flag, environment=environment).exists()
+
+
+@pytest.mark.django_db
+def test_targeting_save_creates_approval_request_for_protected_environment(client, staff_user):
+    project = Project.objects.create(key="ecommerce", name="Ecommerce")
+    environment = Environment.objects.create(project=project, key="production", name="Production", requires_approval=True)
+    flag = FeatureFlag.objects.create(project=project, key="checkout", name="Checkout", value_type="boolean")
+    off = Variation.objects.create(flag=flag, key="off", value=False, is_default=True)
+    state = FlagState.objects.create(flag=flag, environment=environment, enabled=False, default_variation=off)
+    client.force_login(staff_user)
+
+    response = client.post(
+        reverse("django_feature_flags_dashboard:flag_detail", kwargs={"pk": flag.pk}),
+        {
+            "environment": environment.key,
+            "off_variation": off.key,
+            "fallthrough_variation_key": off.key,
+            "reason": "Production review",
+        },
+    )
+
+    assert response.status_code == 302
+    state.refresh_from_db()
+    assert state.targeting == {}
+    approval = ApprovalRequest.objects.get(flag=flag, environment=environment)
+    assert approval.proposed_change["targeting"]["fallthrough"]["variation_key"] == off.key

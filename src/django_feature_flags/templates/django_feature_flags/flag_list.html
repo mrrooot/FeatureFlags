@@ -63,7 +63,7 @@
           {% endif %}
         </td>
         <td>
-          <a class="dff-table-action" href="{% url 'django_feature_flags_dashboard:flag_update' row.flag.pk %}">Edit flag</a>
+          <a class="dff-table-action" href="{% url 'django_feature_flags_dashboard:flag_detail' row.flag.pk %}">Edit flag</a>
         </td>
       </tr>
       {% endfor %}

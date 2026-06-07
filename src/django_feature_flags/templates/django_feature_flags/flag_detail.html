@@ -1,0 +1,19 @@
+{% extends "django_feature_flags/base.html" %}
+
+{% block content %}
+<header class="dff-header">
+  <div>
+    <p class="dff-kicker">{{ style_name }} / Targeting</p>
+    <h1>{{ flag.name }}</h1>
+    <p class="dff-subtitle"><strong class="dff-code">{{ flag.key }}</strong> targeting for {{ state.environment.key }}.</p>
+  </div>
+</header>
+
+<form method="post">
+  {% csrf_token %}
+  <input type="hidden" name="environment" value="{{ state.environment.key }}">
+  <input type="hidden" name="off_variation" value="{{ state.default_variation.key }}">
+  <input type="hidden" name="fallthrough_variation_key" value="{{ state.default_variation.key }}">
+  <button type="submit">Save targeting</button>
+</form>
+{% endblock %}
