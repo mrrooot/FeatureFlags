@@ -1,63 +1,105 @@
 {% extends "django_feature_flags/base.html" %}
 
 {% block content %}
-<header class="dff-page-header">
+<header class="dff-page-header dff-board-hero">
   <div>
-    <p class="dff-kicker">Flags</p>
+    <p class="dff-kicker">Rollout board</p>
     <h1>Feature flags</h1>
-    <p class="dff-subtitle">Open a flag to edit Targeting, Variations, Settings, and History.</p>
+    <p class="dff-subtitle">Scan rollout exposure, environment coverage, and targeting health before opening a flag workspace.</p>
   </div>
   <div class="dff-actions">
     <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">Create flag</a>
   </div>
 </header>
 
-<section class="dff-panel dff-panel-flush">
+<section class="dff-board-stats" aria-label="Flag board summary">
+  <a class="dff-board-stat{% if selected_status == 'all' %} dff-board-stat-active{% endif %}" href="{% url 'django_feature_flags_dashboard:flag_list' %}{% if query %}?q={{ query|urlencode }}{% endif %}">
+    <span>All flags</span>
+    <strong>{{ board_stats.total }}</strong>
+  </a>
+  <a class="dff-board-stat{% if selected_status == 'live' %} dff-board-stat-active{% endif %}" href="?status=live{% if query %}&amp;q={{ query|urlencode }}{% endif %}">
+    <span>Live</span>
+    <strong>{{ board_stats.live }}</strong>
+  </a>
+  <a class="dff-board-stat{% if selected_status == 'mixed' %} dff-board-stat-active{% endif %}" href="?status=mixed{% if query %}&amp;q={{ query|urlencode }}{% endif %}">
+    <span>Mixed</span>
+    <strong>{{ board_stats.mixed }}</strong>
+  </a>
+  <a class="dff-board-stat{% if selected_status == 'off' %} dff-board-stat-active{% endif %}" href="?status=off{% if query %}&amp;q={{ query|urlencode }}{% endif %}">
+    <span>Off</span>
+    <strong>{{ board_stats.off }}</strong>
+  </a>
+  <a class="dff-board-stat{% if selected_status == 'archived' %} dff-board-stat-active{% endif %}" href="?status=archived{% if query %}&amp;q={{ query|urlencode }}{% endif %}">
+    <span>Archived</span>
+    <strong>{{ board_stats.archived }}</strong>
+  </a>
+</section>
+
+<section class="dff-panel dff-flag-board-shell">
+  <form class="dff-board-toolbar" method="get" role="search">
+    <label>
+      <span>Search board</span>
+      <input type="search" name="q" value="{{ query }}" placeholder="Flag, project, or key">
+    </label>
+    <label>
+      <span>Status</span>
+      <select name="status">
+        <option value="all"{% if selected_status == "all" %} selected{% endif %}>All statuses</option>
+        <option value="live"{% if selected_status == "live" %} selected{% endif %}>Live</option>
+        <option value="mixed"{% if selected_status == "mixed" %} selected{% endif %}>Mixed</option>
+        <option value="off"{% if selected_status == "off" %} selected{% endif %}>Off</option>
+        <option value="archived"{% if selected_status == "archived" %} selected{% endif %}>Archived</option>
+      </select>
+    </label>
+    <button class="dff-button dff-button-secondary" type="submit">Apply</button>
+  </form>
+
   {% if flag_rows %}
-  <table class="dff-table dff-flag-table">
-    <thead>
-      <tr>
-        <th>Flag</th>
-        <th>Project</th>
-        <th>Type</th>
-        <th>Environments</th>
-        <th>Targeting</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in flag_rows %}
-      <tr>
-        <td><strong class="dff-code">{{ row.flag.key }}</strong><span>{{ row.flag.name }}</span></td>
-        <td>{{ row.flag.project.key }}</td>
-        <td><span class="dff-status dff-status-neutral">{{ row.flag.value_type }}</span></td>
-        <td>
-          <div class="dff-chip-row">
-            {% for state in row.states %}
-            <span class="dff-chip">{{ state.environment.key }}</span>
-            {% empty %}
-            <span class="dff-muted-text">No states</span>
-            {% endfor %}
-          </div>
-        </td>
-        <td>
-          {% if row.flag.archived %}
-          <span class="dff-status dff-status-archived">Archived</span>
-          {% elif row.enabled_count %}
-          <span class="dff-status dff-status-live">{{ row.enabled_count }} on</span>
-          {% else %}
-          <span class="dff-status dff-status-off">Configured off</span>
-          {% endif %}
-        </td>
-        <td><a class="dff-table-action" href="{% url 'django_feature_flags_dashboard:flag_detail' row.flag.pk %}">Open</a></td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="dff-flag-board" aria-label="Feature flags">
+    {% for row in flag_rows %}
+    <article class="dff-flag-board-row dff-flag-board-row-{{ row.status_key }}">
+      <div class="dff-flag-signal" aria-hidden="true">
+        <span style="height: {{ row.rollout_percent }}%"></span>
+      </div>
+      <div class="dff-flag-primary">
+        <div class="dff-flag-title-row" aria-label="Targeting status">
+          <span class="dff-status dff-status-{{ row.status_key }}">{{ row.status_label }}</span>
+          <span class="dff-status dff-status-neutral">{{ row.flag.value_type }}</span>
+        </div>
+        <h2>{{ row.flag.name }}</h2>
+        <p><strong class="dff-code">{{ row.flag.key }}</strong> in {{ row.flag.project.key }}</p>
+      </div>
+      <div class="dff-flag-rollout">
+        <span>Active in</span>
+        <strong>{{ row.enabled_count }}/{{ row.state_count }}</strong>
+        <div class="dff-rollout-track" aria-hidden="true">
+          <span style="width: {{ row.rollout_percent }}%"></span>
+        </div>
+      </div>
+      <div class="dff-flag-envs">
+        <span>Environments</span>
+        <div class="dff-chip-row">
+          {% for state in row.states %}
+          <span class="dff-chip{% if state.enabled %} dff-chip-live{% endif %}">{{ state.environment.key }}</span>
+          {% empty %}
+          <span class="dff-muted-text">No states</span>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="dff-flag-meta">
+        <span>Updated</span>
+        <strong>{{ row.flag.updated_at|date:"M j, Y" }}</strong>
+      </div>
+      <div class="dff-flag-open">
+        <a class="dff-table-action" href="{% url 'django_feature_flags_dashboard:flag_detail' row.flag.pk %}">Open</a>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
   {% else %}
   <div class="dff-empty">
-    <strong>No feature flags yet</strong>
-    <span>Create a flag and each configured environment will start safely off.</span>
+    <strong>No matching feature flags</strong>
+    <span>Adjust the board filters or create a flag and each configured environment will start safely off.</span>
     <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">Create flag</a>
   </div>
   {% endif %}

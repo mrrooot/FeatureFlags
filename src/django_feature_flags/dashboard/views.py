@@ -32,22 +32,71 @@ def dashboard_home(request):
 
 @staff_member_required(login_url="/accounts/login/")
 def flag_list(request):
+    query = request.GET.get("q", "").strip()
+    selected_status = request.GET.get("status", "all")
+    if selected_status not in {"all", "live", "mixed", "off", "archived"}:
+        selected_status = "all"
+
     flags = FeatureFlag.objects.select_related("project").prefetch_related("states__environment").order_by("project__name", "key")
-    flag_rows = []
+    all_rows = []
     for flag in flags:
         states = list(flag.states.all())
-        flag_rows.append(
+        enabled_count = sum(state.enabled for state in states)
+        state_count = len(states)
+        if flag.archived:
+            status_key = "archived"
+            status_label = "Archived"
+        elif enabled_count and enabled_count == state_count:
+            status_key = "live"
+            status_label = "On everywhere"
+        elif enabled_count:
+            status_key = "mixed"
+            status_label = f"{enabled_count} on"
+        else:
+            status_key = "off"
+            status_label = "Configured off"
+
+        all_rows.append(
             {
                 "flag": flag,
                 "states": states,
-                "enabled_count": sum(state.enabled for state in states),
+                "enabled_count": enabled_count,
+                "state_count": state_count,
+                "status_key": status_key,
+                "status_label": status_label,
+                "rollout_percent": round((enabled_count / state_count) * 100) if state_count else 0,
             }
         )
+
+    flag_rows = all_rows
+    if query:
+        lowered_query = query.lower()
+        flag_rows = [
+            row
+            for row in flag_rows
+            if lowered_query in row["flag"].key.lower()
+            or lowered_query in row["flag"].name.lower()
+            or lowered_query in row["flag"].project.key.lower()
+            or lowered_query in row["flag"].project.name.lower()
+        ]
+    if selected_status != "all":
+        flag_rows = [row for row in flag_rows if row["status_key"] == selected_status]
+
+    board_stats = {
+        "total": len(all_rows),
+        "live": sum(1 for row in all_rows if row["status_key"] == "live"),
+        "mixed": sum(1 for row in all_rows if row["status_key"] == "mixed"),
+        "off": sum(1 for row in all_rows if row["status_key"] == "off"),
+        "archived": sum(1 for row in all_rows if row["status_key"] == "archived"),
+    }
     return render(
         request,
         "django_feature_flags/flag_list.html",
         {
             "flag_rows": flag_rows,
+            "board_stats": board_stats,
+            "query": query,
+            "selected_status": selected_status,
             "style_name": "Premium SaaS",
         },
     )

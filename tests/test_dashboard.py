@@ -293,12 +293,38 @@ def test_flag_list_uses_feature_flag_console_table(client, staff_user):
     content = response.content.decode()
     assert "Feature flags" in content
     assert "Create flag" in content
+    assert "Rollout board" in content
+    assert "Active in" in content
+    assert "dff-flag-board-shell" in content
+    assert "dff-flag-board-row" in content
     assert "Targeting" in content
     assert "Configured off" in content
     assert "staging" in content
     assert "Recommendations" in content
     assert "Flag ledger" not in content
     assert "Scan mode" not in content
+
+
+@pytest.mark.django_db
+def test_flag_list_filters_board_by_status_and_search(client, staff_user):
+    project = Project.objects.create(key="ecommerce", name="Ecommerce")
+    production = Environment.objects.create(project=project, key="production", name="Production")
+    live_flag = FeatureFlag.objects.create(project=project, key="recommendations", name="Recommendations", value_type="boolean")
+    off_flag = FeatureFlag.objects.create(project=project, key="checkout", name="Checkout", value_type="boolean")
+    live_default = Variation.objects.create(flag=live_flag, key="default", name="Default", value=False, is_default=True)
+    off_default = Variation.objects.create(flag=off_flag, key="default", name="Default", value=False, is_default=True)
+    FlagState.objects.create(flag=live_flag, environment=production, enabled=True, default_variation=live_default)
+    FlagState.objects.create(flag=off_flag, environment=production, enabled=False, default_variation=off_default)
+    client.force_login(staff_user)
+
+    response = client.get(reverse("django_feature_flags_dashboard:flag_list"), {"status": "live", "q": "recommend"})
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Recommendations" in content
+    assert "checkout" not in content
+    assert 'value="recommend"' in content
+    assert 'value="live" selected' in content
 
 
 @pytest.mark.django_db
