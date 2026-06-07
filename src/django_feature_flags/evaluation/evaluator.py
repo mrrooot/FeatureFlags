@@ -89,7 +89,7 @@ def evaluate_targets(environment, flag, document, context, track):
 
 def evaluate_rules(environment, flag, document, context, track):
     for rule in document.get("rules", []):
-        if clauses_match(context, rule.get("clauses", [])):
+        if clauses_match(context, rule.get("clauses", []), project=flag.project):
             result = serve_result(
                 environment,
                 flag,
@@ -104,6 +104,26 @@ def evaluate_rules(environment, flag, document, context, track):
     return None
 
 
+def prerequisites_match(environment, flag, document, context, visited):
+    for item in document.get("prerequisites", []):
+        prerequisite_key = item.get("flag_key", "")
+        prerequisite_identity = (flag.project.key, environment.key, prerequisite_key)
+        if prerequisite_identity in visited:
+            return False
+        result = evaluate(
+            prerequisite_key,
+            context,
+            default=None,
+            project_key=flag.project.key,
+            environment_key=environment.key,
+            track=False,
+            _visited=visited,
+        )
+        if result.variation_key != item.get("variation_key"):
+            return False
+    return True
+
+
 def evaluate(
     flag_key,
     context,
@@ -113,6 +133,7 @@ def evaluate(
     track=False,
     targeting_override=None,
     enabled_override=None,
+    _visited=None,
 ):
     project = Project.objects.filter(key=project_key).first()
     if project is None:
@@ -125,6 +146,12 @@ def evaluate(
     flag = FeatureFlag.objects.filter(project=project, key=flag_key, archived=False).first()
     if flag is None:
         return default_result(flag_key, environment.key, default, "flag_not_found")
+
+    visited = set(_visited or ())
+    current_identity = (project.key, environment.key, flag.key)
+    if current_identity in visited:
+        return default_result(flag_key, environment.key, default, "prerequisite_cycle")
+    visited.add(current_identity)
 
     state = FlagState.objects.filter(flag=flag, environment=environment).select_related("default_variation").first()
     if state is None or state.default_variation is None:
@@ -156,6 +183,19 @@ def evaluate(
         return tracked_result(environment, flag, variation, context, "off", track)
 
     if has_targeting_document:
+        if not prerequisites_match(environment, flag, document, context, visited):
+            fallthrough_result = serve_result(
+                environment,
+                flag,
+                document.get("fallthrough", {}),
+                context,
+                "prerequisite_failed",
+                track,
+            )
+            if fallthrough_result is not None:
+                return fallthrough_result
+            return tracked_result(environment, flag, state.default_variation, context, "prerequisite_failed", track)
+
         target_result = evaluate_targets(environment, flag, document, context, track)
         if target_result is not None:
             return target_result

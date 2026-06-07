@@ -82,6 +82,29 @@ def clause_matches(context, clause):
     return matched
 
 
-def clauses_match(context, clauses):
-    return all(clause_matches(context, clause) for clause in clauses)
+def segment_clause_matches(context, clause, project):
+    segment_keys = clause.get("values", [])
+    context_kind = clause.get("context_kind", "user")
+    selected_context = normalize_contexts(context).get(context_kind, {})
+    for segment in project.segments.filter(key__in=segment_keys).prefetch_related("rules"):
+        include = True
+        for rule in segment.rules.all():
+            matched = conditions_match(selected_context, rule.conditions)
+            if rule.exclude and matched:
+                include = False
+            if not rule.exclude and not matched:
+                include = False
+        if include:
+            return not clause.get("negate", False)
+    return bool(clause.get("negate", False))
+
+
+def clauses_match(context, clauses, project=None):
+    for clause in clauses:
+        if clause.get("operator") == "segment_match":
+            if project is None or not segment_clause_matches(context, clause, project):
+                return False
+        elif not clause_matches(context, clause):
+            return False
+    return True
 
