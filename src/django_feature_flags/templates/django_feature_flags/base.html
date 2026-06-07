@@ -8,38 +8,52 @@
   <link rel="stylesheet" href="{% static 'django_feature_flags/dashboard.css' %}">
 </head>
 <body>
-  <aside class="dff-sidebar" aria-label="Feature flags navigation">
-    <div class="dff-brand">
-      <span class="dff-brand-mark">FF</span>
-      <span>
-        <strong>FeatureFlow</strong>
-        <small>Release Observatory</small>
-      </span>
+  <div class="dff-app-shell">
+    <aside class="dff-sidebar" aria-label="Feature flags navigation">
+      <a class="dff-brand" href="{% url 'django_feature_flags_dashboard:home' %}">
+        <span class="dff-brand-mark">FF</span>
+        <span>
+          <strong>FeatureFlow</strong>
+          <small>Feature flag console</small>
+        </span>
+      </a>
+      <nav class="dff-sidebar-nav">
+        <a href="{% url 'django_feature_flags_dashboard:flag_list' %}">Feature flags <span>Flags</span></a>
+        <a href="{% url 'django_feature_flags_dashboard:segment_list' %}">Segments <span>Audiences</span></a>
+        <a href="{% url 'django_feature_flags_dashboard:experiment_list' %}">Experiments <span>Tests</span></a>
+        <a href="{% url 'django_feature_flags_dashboard:approval_list' %}">Approvals <span>Review</span></a>
+        <a href="{% url 'django_feature_flags_dashboard:audit_list' %}">Audit log <span>Events</span></a>
+      </nav>
+    </aside>
+    <div class="dff-workspace">
+      <header class="dff-topbar" aria-label="Dashboard context">
+        <div class="dff-context-control">
+          <span>Project</span>
+          <strong>All projects</strong>
+        </div>
+        <div class="dff-context-control">
+          <span>Environment</span>
+          <strong>All environments</strong>
+        </div>
+        <form class="dff-search" role="search">
+          <label for="dff-global-search">Search</label>
+          <input id="dff-global-search" type="search" name="q" aria-label="Search flags, segments, or keys">
+        </form>
+      </header>
+      <main class="dff-main" id="main">
+        {% if messages %}
+        <div class="dff-messages" aria-live="polite">
+          {% for message in messages %}
+          <div class="dff-alert dff-alert-{{ message.tags }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% filter cut:"Release Observatory" %}
+        {% block content %}{% endblock %}
+        {% endfilter %}
+      </main>
     </div>
-    <nav class="dff-sidebar-nav">
-      <a href="{% url 'django_feature_flags_dashboard:home' %}">Overview <span>Control</span></a>
-      <a href="{% url 'django_feature_flags_dashboard:flag_list' %}">Flags <span>Ledger</span></a>
-      <a href="{% url 'django_feature_flags_dashboard:segment_list' %}">Segments <span>Rules</span></a>
-      <a href="{% url 'django_feature_flags_dashboard:experiment_list' %}">Experiments <span>Live</span></a>
-      <a href="{% url 'django_feature_flags_dashboard:approval_list' %}">Approvals <span>Queue</span></a>
-      <a href="{% url 'django_feature_flags_dashboard:audit_list' %}">Audit <span>Trace</span></a>
-    </nav>
-    <div class="dff-sidebar-note">
-      <span class="dff-kicker">Posture</span>
-      <strong>Safe by default</strong>
-      <p>New environment states start disabled until a release owner intentionally rolls them out.</p>
-    </div>
-  </aside>
-  <main class="dff-main" id="main">
-    {% if messages %}
-    <div class="dff-messages" aria-live="polite">
-      {% for message in messages %}
-      <div class="dff-alert dff-alert-{{ message.tags }}">{{ message }}</div>
-      {% endfor %}
-    </div>
-    {% endif %}
-    {% block content %}{% endblock %}
-  </main>
+  </div>
 </body>
 </html>
 
