@@ -208,3 +208,65 @@ def test_sidebar_links_to_full_workflows(client, staff_user):
     assert reverse("django_feature_flags_dashboard:experiment_list") in content
     assert reverse("django_feature_flags_dashboard:approval_list") in content
     assert reverse("django_feature_flags_dashboard:audit_list") in content
+
+
+from django.http import QueryDict
+
+from django_feature_flags.dashboard.targeting_forms import TargetingDocumentForm
+
+
+@pytest.mark.django_db
+def test_targeting_document_form_builds_targets_rules_and_fallthrough():
+    project = Project.objects.create(key="ecommerce", name="Ecommerce")
+    environment = Environment.objects.create(project=project, key="production", name="Production")
+    flag = FeatureFlag.objects.create(project=project, key="checkout", name="Checkout", value_type="boolean")
+    off = Variation.objects.create(flag=flag, key="off", value=False, is_default=True)
+    on = Variation.objects.create(flag=flag, key="on", value=True)
+    data = QueryDict(mutable=True)
+    data.update(
+        {
+            "enabled": "on",
+            "off_variation": off.key,
+            "target_context_kind_0": "user",
+            "target_variation_key_0": on.key,
+            "target_values_0": "user-1\nuser-2",
+            "rule_id_0": "ios-rule",
+            "rule_description_0": "iOS devices",
+            "rule_serve_variation_key_0": on.key,
+            "rule_clause_context_kind_0_0": "device",
+            "rule_clause_attribute_0_0": "platform",
+            "rule_clause_operator_0_0": "in",
+            "rule_clause_values_0_0": "ios,android",
+            "fallthrough_variation_key": off.key,
+        }
+    )
+    data.setlist("target_index", ["0"])
+    data.setlist("rule_index", ["0"])
+    data.setlist("rule_clause_index_0", ["0"])
+
+    form = TargetingDocumentForm(flag=flag, environment=environment, data=data)
+
+    assert form.is_valid(), form.errors
+    assert form.enabled is True
+    assert form.cleaned_document["targets"][0]["values"] == ["user-1", "user-2"]
+    assert form.cleaned_document["rules"][0]["clauses"][0]["values"] == ["ios", "android"]
+
+
+@pytest.mark.django_db
+def test_targeting_document_form_requires_change_reason_when_environment_requires_it():
+    project = Project.objects.create(key="ecommerce", name="Ecommerce")
+    environment = Environment.objects.create(
+        project=project,
+        key="production",
+        name="Production",
+        require_change_reason=True,
+    )
+    flag = FeatureFlag.objects.create(project=project, key="checkout", name="Checkout", value_type="boolean")
+    off = Variation.objects.create(flag=flag, key="off", value=False, is_default=True)
+    data = QueryDict(mutable=True)
+    data.update({"off_variation": off.key, "fallthrough_variation_key": off.key})
+
+    form = TargetingDocumentForm(flag=flag, environment=environment, data=data)
+
+    assert form.is_valid() is False
+    assert form.errors["reason"] == ["Change reason is required for this environment."]
