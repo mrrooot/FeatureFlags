@@ -25,7 +25,7 @@ def test_staff_can_view_flag_list(client, staff_user):
 
     assert response.status_code == 200
     assert b"new_checkout" in response.content
-    assert b"Premium SaaS" in response.content
+    assert b"Feature flags" in response.content
 
 
 @pytest.mark.django_db
@@ -160,7 +160,7 @@ def test_flag_list_shows_update_action(client, staff_user):
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert "Edit flag" in content
+    assert "Open" in content
     assert reverse("django_feature_flags_dashboard:flag_detail", kwargs={"pk": flag.pk}) in content
 
 
@@ -230,7 +230,7 @@ def test_flag_list_shows_create_action(client, staff_user):
     response = client.get("/flags/flags/")
 
     assert response.status_code == 200
-    assert b"New flag" in response.content
+    assert b"Create flag" in response.content
     assert b"/flags/flags/new/" in response.content
 
 
