@@ -178,7 +178,7 @@ def test_flag_list_edit_action_opens_flag_detail(client, staff_user):
 
 
 @pytest.mark.django_db
-def test_flag_detail_renders_launchdarkly_style_targeting_sections(client, staff_user):
+def test_flag_detail_renders_modern_targeting_workspace(client, staff_user):
     project = Project.objects.create(key="ecommerce", name="Ecommerce")
     environment = Environment.objects.create(project=project, key="production", name="Production")
     flag = FeatureFlag.objects.create(project=project, key="checkout", name="Checkout", value_type="boolean")
@@ -191,12 +191,15 @@ def test_flag_detail_renders_launchdarkly_style_targeting_sections(client, staff
     assert response.status_code == 200
     content = response.content.decode()
     assert "Targeting" in content
-    assert "Off variation" in content
-    assert "Prerequisites" in content
+    assert "If all prerequisites pass" in content
     assert "Individual targets" in content
-    assert "Rules" in content
+    assert "Segment rules" in content
+    assert "Custom rules" in content
     assert "Default rule" in content
-    assert "Preview" in content
+    assert "When targeting is off" in content
+    assert "Preview evaluation" in content
+    assert "Unsaved changes" in content
+    assert 'data-save-bar' in content
     assert "targeting.js" in content
 
 
@@ -212,7 +215,7 @@ def test_flag_list_shows_create_action(client, staff_user):
 
 
 @pytest.mark.django_db
-def test_overview_uses_release_observatory_workspace(client, staff_user):
+def test_overview_uses_launchdarkly_style_console(client, staff_user):
     project = Project.objects.create(key="ecommerce", name="Ecommerce")
     environment = Environment.objects.create(project=project, key="production", name="Production")
     flag = FeatureFlag.objects.create(project=project, key="new_checkout", name="New Checkout", value_type="boolean")
@@ -224,16 +227,18 @@ def test_overview_uses_release_observatory_workspace(client, staff_user):
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert "Release Observatory" in content
-    assert "Release posture" in content
-    assert "Release timeline" in content
-    assert "Latest flag ledger" in content
-    assert "Reviewable by default" in content
+    assert "Feature flag console" in content
+    assert "Recently updated flags" in content
+    assert "Needs review" in content
+    assert "Quick actions" in content
     assert "new_checkout" in content
+    assert "Release Observatory" not in content
+    assert "dff-radar" not in content
+    assert "Release timeline" not in content
 
 
 @pytest.mark.django_db
-def test_overview_surfaces_are_clickable_controls(client, staff_user):
+def test_overview_console_links_to_workflows(client, staff_user):
     project = Project.objects.create(key="ecommerce", name="Ecommerce")
     flag = FeatureFlag.objects.create(project=project, key="new_checkout", name="New Checkout", value_type="boolean")
     Variation.objects.create(flag=flag, key="default", name="Default", value=False, is_default=True)
@@ -244,16 +249,17 @@ def test_overview_surfaces_are_clickable_controls(client, staff_user):
     assert response.status_code == 200
     content = response.content.decode()
     assert 'href="#"' not in content
-    assert "dff-radar-link" in content
-    assert "dff-timeline-link" in content
+    assert "dff-quick-actions" in content
+    assert "dff-review-list" in content
+    assert reverse("django_feature_flags_dashboard:segment_list") in content
     assert reverse("django_feature_flags_dashboard:experiment_list") in content
     assert reverse("django_feature_flags_dashboard:audit_list") in content
     assert reverse("django_feature_flags_dashboard:approval_list") in content
-    assert reverse("django_feature_flags_dashboard:flag_update", kwargs={"pk": flag.pk}) in content
+    assert reverse("django_feature_flags_dashboard:flag_detail", kwargs={"pk": flag.pk}) in content
 
 
 @pytest.mark.django_db
-def test_flag_list_uses_ledger_language_and_status_stamps(client, staff_user):
+def test_flag_list_uses_feature_flag_console_table(client, staff_user):
     project = Project.objects.create(key="ecommerce", name="Ecommerce")
     staging = Environment.objects.create(project=project, key="staging", name="Staging")
     flag = FeatureFlag.objects.create(project=project, key="recommendations", name="Recommendations", value_type="boolean")
@@ -265,12 +271,33 @@ def test_flag_list_uses_ledger_language_and_status_stamps(client, staff_user):
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert "Flag ledger" in content
-    assert "Scan mode" in content
-    assert "Flag keys" in content
+    assert "Feature flags" in content
+    assert "Create flag" in content
+    assert "Targeting" in content
     assert "Configured off" in content
     assert "staging" in content
     assert "Recommendations" in content
+    assert "Flag ledger" not in content
+    assert "Scan mode" not in content
+
+
+@pytest.mark.django_db
+def test_dashboard_shell_uses_light_console_structure(client, staff_user):
+    client.force_login(staff_user)
+
+    response = client.get(reverse("django_feature_flags_dashboard:home"))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert 'class="dff-app-shell"' in content
+    assert 'class="dff-sidebar"' in content
+    assert 'class="dff-topbar"' in content
+    assert "Feature flags" in content
+    assert "Segments" in content
+    assert "Audit log" in content
+    assert "Project" in content
+    assert "Environment" in content
+    assert "Release Observatory" not in content
 
 
 @pytest.mark.django_db
