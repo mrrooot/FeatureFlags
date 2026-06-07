@@ -264,9 +264,25 @@
     </div>
     <label class="dff-field dff-field-compact" for="preview-context">
       <span>Context payload</span>
-      <textarea id="preview-context" name="preview_context" rows="12">{"user":{"key":"user-123"},"device":{"key":"device-1","platform":"ios"}}</textarea>
+      <textarea id="preview-context" name="preview_context" rows="12">{% if preview_context %}{{ preview_context }}{% else %}{"user":{"key":"user-123"},"device":{"key":"device-1","platform":"ios"}}{% endif %}</textarea>
     </label>
-    <button class="dff-button dff-button-secondary" type="button" disabled>Preview</button>
+    <button class="dff-button dff-button-secondary" type="submit" formaction="{% url 'django_feature_flags_dashboard:flag_targeting_preview' flag.pk %}">Preview</button>
+    {% if preview_error %}
+    <div class="dff-alert dff-alert-error">{{ preview_error }}</div>
+    {% endif %}
+    {% if preview_result %}
+    <div class="dff-preview-result">
+      <h3>Preview result</h3>
+      <dl>
+        <dt>Variation</dt>
+        <dd>{{ preview_result.variation_key }}</dd>
+        <dt>Reason</dt>
+        <dd>{{ preview_result.reason }}</dd>
+        <dt>Value</dt>
+        <dd><code>{{ preview_result.value }}</code></dd>
+      </dl>
+    </div>
+    {% endif %}
   </aside>
 
   <datalist id="targeting-context-kinds">

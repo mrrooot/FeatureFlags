@@ -325,3 +325,35 @@ def test_targeting_save_creates_approval_request_for_protected_environment(clien
     assert state.targeting == {}
     approval = ApprovalRequest.objects.get(flag=flag, environment=environment)
     assert approval.proposed_change["targeting"]["fallthrough"]["variation_key"] == off.key
+
+
+@pytest.mark.django_db
+def test_targeting_preview_evaluates_unsaved_document(client, staff_user):
+    project = Project.objects.create(key="ecommerce", name="Ecommerce")
+    environment = Environment.objects.create(project=project, key="production", name="Production")
+    flag = FeatureFlag.objects.create(project=project, key="checkout", name="Checkout", value_type="boolean")
+    off = Variation.objects.create(flag=flag, key="off", value=False, is_default=True)
+    on = Variation.objects.create(flag=flag, key="on", value=True)
+    FlagState.objects.create(flag=flag, environment=environment, enabled=False, default_variation=off)
+    client.force_login(staff_user)
+
+    response = client.post(
+        reverse("django_feature_flags_dashboard:flag_targeting_preview", kwargs={"pk": flag.pk}),
+        {
+            "environment": environment.key,
+            "enabled": "on",
+            "off_variation": off.key,
+            "target_index": ["0"],
+            "target_context_kind_0": "user",
+            "target_variation_key_0": on.key,
+            "target_values_0": "user-1",
+            "fallthrough_variation_key": off.key,
+            "preview_context": '{"user":{"key":"user-1"}}',
+        },
+    )
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "Preview result" in content
+    assert "target_match" in content
+    assert "on" in content

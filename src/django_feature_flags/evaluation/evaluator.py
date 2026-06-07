@@ -104,7 +104,16 @@ def evaluate_rules(environment, flag, document, context, track):
     return None
 
 
-def evaluate(flag_key, context, default=None, project_key="default", environment_key="production", track=False):
+def evaluate(
+    flag_key,
+    context,
+    default=None,
+    project_key="default",
+    environment_key="production",
+    track=False,
+    targeting_override=None,
+    enabled_override=None,
+):
     project = Project.objects.filter(key=project_key).first()
     if project is None:
         return default_result(flag_key, environment_key, default, "project_not_found")
@@ -126,7 +135,9 @@ def evaluate(flag_key, context, default=None, project_key="default", environment
         if variation is not None:
             return tracked_result(environment, flag, variation, context, "emergency_override", track)
 
-    document = normalized_targeting(state)
+    document = targeting_override if targeting_override is not None else normalized_targeting(state)
+    state_enabled = state.enabled if enabled_override is None else enabled_override
+    has_targeting_document = targeting_override is not None or bool(state.targeting)
     try:
         document = validate_targeting(flag, environment, document)
     except TargetingValidationError as exc:
@@ -140,11 +151,11 @@ def evaluate(flag_key, context, default=None, project_key="default", environment
             detail={"errors": exc.errors},
         )
 
-    if not state.enabled:
+    if not state_enabled:
         variation = variation_by_key(flag, document.get("off_variation")) or state.default_variation
         return tracked_result(environment, flag, variation, context, "off", track)
 
-    if state.targeting:
+    if has_targeting_document:
         target_result = evaluate_targets(environment, flag, document, context, track)
         if target_result is not None:
             return target_result

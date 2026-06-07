@@ -10,7 +10,8 @@ from django.views.decorators.http import require_POST
 from django_feature_flags.audit.service import create_approval_request, create_audit_log
 from django_feature_flags.dashboard.forms import ApprovalRequestForm, ExperimentForm, FeatureFlagForm, SegmentForm
 from django_feature_flags.dashboard.targeting_forms import TargetingDocumentForm
-from django_feature_flags.models import ApprovalRequest, AuditLog, Environment, Experiment, FeatureFlag, Project, Segment
+from django_feature_flags.evaluation.evaluator import evaluate
+from django_feature_flags.models import ApprovalRequest, AuditLog, Environment, Experiment, FeatureFlag, FlagState, Project, Segment
 
 
 @staff_member_required(login_url="/accounts/login/")
@@ -132,6 +133,56 @@ def flag_detail(request, pk):
             "variations": flag.variations.order_by("key"),
             "available_flags": flag.project.flags.exclude(pk=flag.pk).order_by("key"),
             "segments": flag.project.segments.order_by("key"),
+            "style_name": "Premium SaaS",
+        },
+    )
+
+
+@staff_member_required(login_url="/accounts/login/")
+@require_POST
+def flag_targeting_preview(request, pk):
+    flag = get_object_or_404(FeatureFlag.objects.select_related("project"), pk=pk)
+    state = get_object_or_404(
+        FlagState.objects.select_related("environment", "default_variation"),
+        flag=flag,
+        environment__key=request.POST.get("environment", ""),
+    )
+    form = TargetingDocumentForm(flag=flag, environment=state.environment, state=state, data=request.POST)
+    preview_error = ""
+    preview_result = None
+    preview_context = request.POST.get("preview_context", "{}") or "{}"
+    if form.is_valid():
+        try:
+            parsed_context = json.loads(preview_context)
+        except json.JSONDecodeError:
+            preview_error = "Preview context must be valid JSON."
+        else:
+            preview_result = evaluate(
+                flag.key,
+                parsed_context,
+                default=None,
+                project_key=flag.project.key,
+                environment_key=state.environment.key,
+                targeting_override=form.cleaned_document,
+                enabled_override=form.enabled,
+            )
+
+    states = list(flag.states.select_related("environment", "default_variation").order_by("environment__name"))
+    return render(
+        request,
+        "django_feature_flags/flag_detail.html",
+        {
+            "flag": flag,
+            "states": states,
+            "state": state,
+            "form": form,
+            "targeting": form.cleaned_document or form.initial_document(),
+            "variations": flag.variations.order_by("key"),
+            "available_flags": flag.project.flags.exclude(pk=flag.pk).order_by("key"),
+            "segments": flag.project.segments.order_by("key"),
+            "preview_context": preview_context,
+            "preview_result": preview_result,
+            "preview_error": preview_error,
             "style_name": "Premium SaaS",
         },
     )
