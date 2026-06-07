@@ -98,6 +98,7 @@ class FlagState(TimeStampedModel):
     enabled = models.BooleanField(default=False)
     default_variation = models.ForeignKey(Variation, related_name="+", null=True, blank=True, on_delete=models.PROTECT)
     rollout = models.JSONField(default=dict, blank=True)
+    targeting = models.JSONField(default=dict, blank=True)
     emergency_override = models.JSONField(default=dict, blank=True)
 
     class Meta:
