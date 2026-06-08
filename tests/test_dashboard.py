@@ -347,6 +347,20 @@ def test_dashboard_shell_uses_light_console_structure(client, staff_user):
 
 
 @pytest.mark.django_db
+def test_dashboard_shell_loads_visual_refresh_layer(client, staff_user):
+    client.force_login(staff_user)
+
+    response = client.get(reverse("django_feature_flags_dashboard:home"))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert 'data-dff-visual-root' in content
+    assert 'data-dff-metric-card' in content
+    assert 'data-dff-metric-value' in content
+    assert "django_feature_flags/dashboard.js" in content
+
+
+@pytest.mark.django_db
 def test_create_flag_form_uses_guided_observatory_copy(client, staff_user, settings):
     settings.DJANGO_FEATURE_FLAGS_ENVIRONMENTS = ("development", "staging", "production")
     project = Project.objects.create(key="ecommerce", name="Ecommerce")

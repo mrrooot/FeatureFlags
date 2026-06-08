@@ -14,24 +14,24 @@
 </header>
 
 <section class="dff-metric-grid" aria-label="Workspace summary">
-  <a class="dff-metric-card" href="{% url 'django_feature_flags_dashboard:flag_list' %}">
+  <a class="dff-metric-card" data-dff-metric-card href="{% url 'django_feature_flags_dashboard:flag_list' %}">
     <span>Flags</span>
-    <strong>{{ flag_count }}</strong>
+    <strong data-dff-metric-value>{{ flag_count }}</strong>
     <small>Feature decisions</small>
   </a>
-  <a class="dff-metric-card" href="{% url 'django_feature_flags_dashboard:segment_list' %}">
+  <a class="dff-metric-card" data-dff-metric-card href="{% url 'django_feature_flags_dashboard:segment_list' %}">
     <span>Segments</span>
-    <strong>{{ segment_count }}</strong>
+    <strong data-dff-metric-value>{{ segment_count }}</strong>
     <small>Reusable audiences</small>
   </a>
-  <a class="dff-metric-card" href="{% url 'django_feature_flags_dashboard:experiment_list' %}">
+  <a class="dff-metric-card" data-dff-metric-card href="{% url 'django_feature_flags_dashboard:experiment_list' %}">
     <span>Experiments</span>
-    <strong>{{ experiment_count }}</strong>
+    <strong data-dff-metric-value>{{ experiment_count }}</strong>
     <small>Running allocations</small>
   </a>
-  <a class="dff-metric-card" href="{% url 'django_feature_flags_dashboard:approval_list' %}">
+  <a class="dff-metric-card" data-dff-metric-card href="{% url 'django_feature_flags_dashboard:approval_list' %}">
     <span>Needs review</span>
-    <strong>{{ approval_count }}</strong>
+    <strong data-dff-metric-value>{{ approval_count }}</strong>
     <small>Pending approvals</small>
   </a>
 </section>
