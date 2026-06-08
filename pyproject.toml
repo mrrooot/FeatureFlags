@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "django-featureflags"
-version = "0.1.0"
+version = "0.2.0"
 description = "Embedded Django feature flag platform with dashboard, evaluation API, events, and experiments."
 readme = "README.md"
 requires-python = ">=3.10"

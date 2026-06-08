@@ -614,5 +614,5 @@ DJANGO_FEATURE_FLAGS_ENVIRONMENTS=development,staging,production python manage.p
 Current package version:
 
 ```text
-0.1.0
+0.2.0
 ```
