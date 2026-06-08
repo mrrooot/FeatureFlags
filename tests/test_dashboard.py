@@ -368,6 +368,63 @@ def test_dashboard_shell_uses_light_console_structure(client, staff_user):
 
 
 @pytest.mark.django_db
+def test_dashboard_shell_uses_thiqal_brand_defaults(client, staff_user, monkeypatch):
+    monkeypatch.delenv("DJANGO_FEATURE_FLAGS_BRAND_NAME", raising=False)
+    monkeypatch.delenv("DJANGO_FEATURE_FLAGS_BRAND_MARK", raising=False)
+    monkeypatch.delenv("DJANGO_FEATURE_FLAGS_BRAND_TAGLINE", raising=False)
+    monkeypatch.delenv("DJANGO_FEATURE_FLAGS_BRAND_TITLE", raising=False)
+    client.force_login(staff_user)
+
+    response = client.get(reverse("django_feature_flags_dashboard:home"))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "<title>Thiqal Feature Flags</title>" in content
+    assert "Thiqal" in content
+    assert "TQ" in content
+    assert "Feature flag console" in content
+    assert "FeatureFlow" not in content
+
+
+@pytest.mark.django_db
+def test_dashboard_shell_uses_env_brand(client, staff_user, monkeypatch):
+    monkeypatch.setenv("DJANGO_FEATURE_FLAGS_BRAND_NAME", "Thiqal")
+    monkeypatch.setenv("DJANGO_FEATURE_FLAGS_BRAND_MARK", "TH")
+    monkeypatch.setenv("DJANGO_FEATURE_FLAGS_BRAND_TAGLINE", "Release control")
+    monkeypatch.setenv("DJANGO_FEATURE_FLAGS_BRAND_TITLE", "Thiqal Control")
+    client.force_login(staff_user)
+
+    response = client.get(reverse("django_feature_flags_dashboard:home"))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "<title>Thiqal Control</title>" in content
+    assert "Thiqal" in content
+    assert "TH" in content
+    assert "Release control" in content
+
+
+@pytest.mark.django_db
+def test_dashboard_shell_prefers_settings_brand_over_env(client, staff_user, settings, monkeypatch):
+    monkeypatch.setenv("DJANGO_FEATURE_FLAGS_BRAND_NAME", "Env Brand")
+    settings.DJANGO_FEATURE_FLAGS_BRAND_NAME = "Settings Brand"
+    settings.DJANGO_FEATURE_FLAGS_BRAND_MARK = "SB"
+    settings.DJANGO_FEATURE_FLAGS_BRAND_TAGLINE = "Settings tagline"
+    settings.DJANGO_FEATURE_FLAGS_BRAND_TITLE = "Settings Title"
+    client.force_login(staff_user)
+
+    response = client.get(reverse("django_feature_flags_dashboard:home"))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "<title>Settings Title</title>" in content
+    assert "Settings Brand" in content
+    assert "SB" in content
+    assert "Settings tagline" in content
+    assert "Env Brand" not in content
+
+
+@pytest.mark.django_db
 def test_dashboard_shell_loads_visual_refresh_layer(client, staff_user):
     client.force_login(staff_user)
 

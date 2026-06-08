@@ -1,6 +1,8 @@
 {% extends "django_feature_flags/base.html" %}
+{% load dff_brand %}
 
 {% block content %}
+{% dff_dashboard_brand as dff_brand %}
 <header class="dff-header">
   <div>
     <p class="dff-kicker">{{ style_name }} / {{ form_kicker }}</p>
@@ -17,7 +19,7 @@
     {% csrf_token %}
 
     <div class="dff-console-rail" aria-hidden="true">
-      <span>FF</span>
+      <span>{{ dff_brand.mark }}</span>
       <small>Release console</small>
     </div>
 

@@ -152,6 +152,28 @@ DJANGO_FEATURE_FLAGS_ENVIRONMENTS=development,staging,production
 
 Environment keys are used by dashboard state sync, bootstrap, local evaluation, remote SDK authentication, and rollout salt.
 
+## Branding Configuration
+
+Dashboard branding can be configured from Django settings or `.env` / process environment variables. Django settings take precedence over environment variables.
+
+Defaults:
+
+```env
+DJANGO_FEATURE_FLAGS_BRAND_NAME=Thiqal
+DJANGO_FEATURE_FLAGS_BRAND_MARK=TQ
+DJANGO_FEATURE_FLAGS_BRAND_TAGLINE=Feature flag console
+DJANGO_FEATURE_FLAGS_BRAND_TITLE=Thiqal Feature Flags
+```
+
+The values control:
+
+| Variable | UI location |
+| --- | --- |
+| `DJANGO_FEATURE_FLAGS_BRAND_NAME` | Sidebar brand name |
+| `DJANGO_FEATURE_FLAGS_BRAND_MARK` | Sidebar and form rail mark |
+| `DJANGO_FEATURE_FLAGS_BRAND_TAGLINE` | Sidebar subtitle |
+| `DJANGO_FEATURE_FLAGS_BRAND_TITLE` | Browser page title |
+
 ## Dashboard
 
 Staff users can open:

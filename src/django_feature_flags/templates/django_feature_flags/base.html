@@ -1,10 +1,11 @@
-{% load static %}
+{% load static dff_brand %}
+{% dff_dashboard_brand as dff_brand %}
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Django Feature Flags</title>
+  <title>{{ dff_brand.title }}</title>
   <link rel="stylesheet" href="{% static 'django_feature_flags/dashboard.css' %}">
   <script defer src="{% static 'django_feature_flags/dashboard.js' %}"></script>
 </head>
@@ -12,10 +13,10 @@
   <div class="dff-app-shell" data-dff-visual-root>
     <aside class="dff-sidebar" aria-label="Feature flags navigation">
       <a class="dff-brand" href="{% url 'django_feature_flags_dashboard:home' %}">
-        <span class="dff-brand-mark">FF</span>
+        <span class="dff-brand-mark">{{ dff_brand.mark }}</span>
         <span>
-          <strong>FeatureFlow</strong>
-          <small>Feature flag console</small>
+          <strong>{{ dff_brand.name }}</strong>
+          <small>{{ dff_brand.tagline }}</small>
         </span>
       </a>
       <nav class="dff-sidebar-nav">
