@@ -382,7 +382,7 @@ def test_dashboard_shell_loads_visual_refresh_layer(client, staff_user):
 
 
 @pytest.mark.django_db
-def test_create_flag_form_uses_guided_observatory_copy(client, staff_user, settings):
+def test_create_flag_form_uses_edit_style_console_copy(client, staff_user, settings):
     settings.DJANGO_FEATURE_FLAGS_ENVIRONMENTS = ("development", "staging", "production")
     project = Project.objects.create(key="ecommerce", name="Ecommerce")
     client.force_login(staff_user)
@@ -391,8 +391,8 @@ def test_create_flag_form_uses_guided_observatory_copy(client, staff_user, setti
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert "Launch sequence" in content
-    assert "Default variation" in content
+    assert "Flag console" in content
+    assert "Current default" in content
     assert "Safe by default" in content
     assert "Project scoped key" in content
     assert "Deployment managed" in content

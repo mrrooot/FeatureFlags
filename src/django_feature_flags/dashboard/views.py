@@ -119,9 +119,9 @@ def flag_create(request):
         {
             "form": form,
             "form_title": "Create flag",
-            "form_kicker": "Launch sequence",
+            "form_kicker": "Flag console",
             "submit_label": "Create flag",
-            "side_heading": "Default variation",
+            "side_heading": "Current default",
             "style_name": "Premium SaaS",
         },
     )
