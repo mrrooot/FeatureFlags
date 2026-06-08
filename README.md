@@ -111,6 +111,39 @@ Dashboard routes:
 | `/flags/approvals/` | Approval requests |
 | `/flags/audit/` | Audit log |
 
+## Console UI
+
+The dashboard UI is designed as a feature release control center for Django teams. It emphasizes safe releases, environment awareness, auditability, and fast operational scanning rather than a Django admin-style table skin.
+
+Main screens:
+
+- Overview: KPI cards, environment signal, recently changed flags, review queue, quick actions, and recent audit activity.
+- Feature flags: searchable rollout board with operational flag rows, environment lanes, rollout exposure, status filters, and quick targeting access.
+- Flag detail: control center for one flag with environment lanes, release safety context, targeting rules, evaluation preview, and SDK snippets.
+- Segments: reusable audience rules for targeting and exclusions.
+- Approvals: release safety queue for protected environment changes.
+- Audit trail: searchable timeline of flag, approval, segment, and experiment changes with before/after detail.
+
+Frontend architecture:
+
+- No npm, no build step, no external CDNs, and no remote fonts.
+- Templates live in `src/django_feature_flags/templates/django_feature_flags/`.
+- Static CSS and browser-native JavaScript live in `src/django_feature_flags/static/django_feature_flags/`.
+- The UI uses Django-rendered HTML, CSS design tokens, and small vanilla JavaScript enhancements for copy actions, toasts, theme toggle, command search focus, and form interaction hooks.
+- Primary screens expose `data-dff-screen` and `data-dff-visual-checkpoint` attributes so no-dependency Django smoke tests, or future browser screenshot tests, can target stable UI landmarks.
+
+Accessibility and security notes:
+
+- The shell includes semantic landmarks, a skip link, active navigation state, visible focus rings, labeled form controls, `aria-live` toast messaging, and reduced-motion handling.
+- User and database content is rendered through Django template escaping by default.
+- Audit JSON is shown as escaped text and exposed with Django's `json_script` helper for safe machine-readable payloads.
+- The frontend avoids `eval`, the `Function` constructor, external scripts/styles, and unsafe dynamic HTML injection.
+
+Theming:
+
+- The stylesheet defines tokens for backgrounds, surfaces, borders, text, accents, environments, flag states, approval/risk states, radii, shadows, spacing, z-index, animation timing, and focus rings.
+- Light theme is the default. A dark theme token set is included and can be toggled in the dashboard without storing secrets or SDK keys.
+
 ## Create a Flag
 
 Open:

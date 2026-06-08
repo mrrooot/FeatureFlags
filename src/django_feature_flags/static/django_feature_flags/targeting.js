@@ -15,9 +15,26 @@
       return null;
     }
     var fragment = template.content.cloneNode(true);
+    var walker = document.createTreeWalker(fragment, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+    var current = walker.currentNode;
+    var replacement = String(index);
+
+    while (current) {
+      if (current.nodeType === Node.TEXT_NODE && current.nodeValue.indexOf("__index__") !== -1) {
+        current.nodeValue = current.nodeValue.replace(/__index__/g, replacement);
+      }
+      if (current.nodeType === Node.ELEMENT_NODE) {
+        Array.prototype.slice.call(current.attributes).forEach(function (attribute) {
+          if (attribute.value.indexOf("__index__") !== -1) {
+            current.setAttribute(attribute.name, attribute.value.replace(/__index__/g, replacement));
+          }
+        });
+      }
+      current = walker.nextNode();
+    }
+
     var wrapper = document.createElement("div");
     wrapper.appendChild(fragment);
-    wrapper.innerHTML = wrapper.innerHTML.replace(/__index__/g, String(index));
     return wrapper.firstElementChild;
   }
 

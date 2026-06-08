@@ -1,18 +1,23 @@
 {% extends "django_feature_flags/base.html" %}
 
 {% block content %}
-<header class="dff-header">
+<header class="dff-header" data-dff-screen="segments" data-dff-visual-checkpoint="primary">
   <div>
-    <p class="dff-kicker">{{ style_name }} / Audience console</p>
+    <p class="dff-kicker">Audience console</p>
     <h1>Segments</h1>
-    <p class="dff-subtitle">Build reusable audience rules for targeting, exclusions, and rollout decisions.</p>
+    <p class="dff-subtitle">Reusable audiences for targeting, exclusions, and rollout decisions across release workflows.</p>
+    <div class="dff-header-meta">
+      <span>Rule summary</span>
+      <span>Reusable targeting</span>
+      <span>Project scoped</span>
+    </div>
   </div>
   <div class="dff-actions">
     <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:segment_create' %}">New segment</a>
   </div>
 </header>
 
-<section class="dff-ledger-primer">
+<section class="dff-ledger-primer dff-audience-primer">
   <a class="dff-panel dff-primer-panel" href="{% url 'django_feature_flags_dashboard:segment_create' %}">
     <span class="dff-label">Audience signal</span>
     <strong>Rules</strong>
@@ -25,14 +30,14 @@
   </a>
 </section>
 
-<section class="dff-panel dff-panel-flush">
+<section class="dff-panel dff-panel-flush dff-audience-shell">
   {% if segments %}
-  <table class="dff-table dff-ledger-table">
+  <table class="dff-table dff-ledger-table dff-data-table">
     <thead>
       <tr>
         <th>Segment</th>
         <th>Project</th>
-        <th>Rules</th>
+        <th>Rule summary</th>
         <th>Mode</th>
         <th>Action</th>
       </tr>
@@ -67,8 +72,9 @@
   </table>
   {% else %}
   <div class="dff-empty">
+    <span class="dff-empty-visual" aria-hidden="true"></span>
     <strong>No segments defined</strong>
-    <span>Create an audience segment and attach JSON conditions for targeting decisions.</span>
+    <span>Create an audience segment to reuse plan, account, or context conditions across multiple flags.</span>
     <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:segment_create' %}">New segment</a>
   </div>
   {% endif %}

@@ -26,6 +26,7 @@ def dashboard_home(request):
         "audit_count": AuditLog.objects.count(),
         "recent_flags": flags,
         "style_name": "Premium SaaS",
+        "active_nav": "overview",
     }
     return render(request, "django_feature_flags/dashboard.html", context)
 
@@ -98,6 +99,7 @@ def flag_list(request):
             "query": query,
             "selected_status": selected_status,
             "style_name": "Premium SaaS",
+            "active_nav": "flags",
         },
     )
 
@@ -123,6 +125,7 @@ def flag_create(request):
             "submit_label": "Create flag",
             "side_heading": "Current default",
             "style_name": "Premium SaaS",
+            "active_nav": "flags",
         },
     )
 
@@ -183,6 +186,7 @@ def flag_detail(request, pk):
             "available_flags": flag.project.flags.exclude(pk=flag.pk).order_by("key"),
             "segments": flag.project.segments.order_by("key"),
             "style_name": "Premium SaaS",
+            "active_nav": "flags",
         },
     )
 
@@ -233,6 +237,7 @@ def flag_targeting_preview(request, pk):
             "preview_result": preview_result,
             "preview_error": preview_error,
             "style_name": "Premium SaaS",
+            "active_nav": "flags",
         },
     )
 
@@ -268,6 +273,7 @@ def flag_update(request, pk):
             "submit_label": "Update flag",
             "side_heading": "Current default",
             "style_name": "Premium SaaS",
+            "active_nav": "flags",
         },
     )
 
@@ -281,6 +287,7 @@ def segment_list(request):
         {
             "segments": segments,
             "style_name": "Premium SaaS",
+            "active_nav": "segments",
         },
     )
 
@@ -305,6 +312,7 @@ def segment_create(request):
             "form_kicker": "Audience console",
             "submit_label": "Create segment",
             "style_name": "Premium SaaS",
+            "active_nav": "segments",
         },
     )
 
@@ -331,6 +339,7 @@ def segment_update(request, pk):
             "form_kicker": "Audience console",
             "submit_label": "Update segment",
             "style_name": "Premium SaaS",
+            "active_nav": "segments",
         },
     )
 
@@ -360,6 +369,7 @@ def experiment_list(request):
             "experiments": experiments,
             "experiment_rows": experiment_rows,
             "style_name": "Premium SaaS",
+            "active_nav": "experiments",
         },
     )
 
@@ -384,6 +394,7 @@ def experiment_create(request):
             "form_kicker": "Experiment console",
             "submit_label": "Create experiment",
             "style_name": "Premium SaaS",
+            "active_nav": "experiments",
         },
     )
 
@@ -413,6 +424,7 @@ def experiment_update(request, pk):
             "form_kicker": "Experiment console",
             "submit_label": "Update experiment",
             "style_name": "Premium SaaS",
+            "active_nav": "experiments",
         },
     )
 
@@ -429,6 +441,7 @@ def approval_list(request):
         {
             "approvals": approvals,
             "style_name": "Premium SaaS",
+            "active_nav": "approvals",
         },
     )
 
@@ -453,6 +466,7 @@ def approval_create(request):
             "form_kicker": "Approval queue",
             "submit_label": "Create request",
             "style_name": "Premium SaaS",
+            "active_nav": "approvals",
         },
     )
 
@@ -518,6 +532,7 @@ def audit_list(request):
             "flags": FeatureFlag.objects.order_by("project__name", "key"),
             "environments": Environment.objects.order_by("project__name", "name"),
             "style_name": "Premium SaaS",
+            "active_nav": "audit",
         },
     )
 
@@ -533,5 +548,6 @@ def audit_detail(request, pk):
             "before_json": json.dumps(log.before, indent=2, sort_keys=True),
             "after_json": json.dumps(log.after, indent=2, sort_keys=True),
             "style_name": "Premium SaaS",
+            "active_nav": "audit",
         },
     )

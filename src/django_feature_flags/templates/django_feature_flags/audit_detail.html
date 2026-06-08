@@ -1,7 +1,7 @@
 {% extends "django_feature_flags/base.html" %}
 
 {% block content %}
-<header class="dff-header">
+<header class="dff-header" data-dff-screen="audit-detail" data-dff-visual-checkpoint="primary">
   <div>
     <p class="dff-kicker">{{ style_name }} / Audit trace</p>
     <h1>{{ log.action }}</h1>
@@ -15,11 +15,13 @@
 <section class="dff-audit-detail">
   <article class="dff-panel dff-json-panel">
     <p class="dff-kicker">Before</p>
-    <pre>{{ before_json|safe }}</pre>
+    <pre>{{ before_json }}</pre>
+    {{ log.before|json_script:"dff-before-json" }}
   </article>
   <article class="dff-panel dff-json-panel">
     <p class="dff-kicker">After</p>
-    <pre>{{ after_json|safe }}</pre>
+    <pre>{{ after_json }}</pre>
+    {{ log.after|json_script:"dff-after-json" }}
   </article>
 </section>
 {% endblock %}

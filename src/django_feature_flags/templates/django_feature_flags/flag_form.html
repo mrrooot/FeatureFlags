@@ -7,10 +7,10 @@
   <div>
     <p class="dff-kicker">{{ style_name }} / {{ form_kicker }}</p>
     <h1>{{ form_title }}</h1>
-    <p class="dff-subtitle">Define the flag identity and default value. Environment states are configured automatically from your .env for each deployment.</p>
+    <p class="dff-subtitle">Create a project-scoped release control with safe defaults, SDK-ready keys, and environment states configured automatically from your .env.</p>
   </div>
   <div class="dff-actions">
-    <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:flag_list' %}">Back to ledger</a>
+    <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:flag_list' %}">Back to flags</a>
   </div>
 </header>
 
@@ -31,15 +31,19 @@
       <div class="dff-form-manifest" aria-label="Flag save path">
         <button class="dff-form-step dff-form-step-active" type="button" data-dff-step-target="identity" aria-current="step">
           <strong>01</strong>
-          <span>Identity lock</span>
+          <span>Basics</span>
         </button>
         <button class="dff-form-step" type="button" data-dff-step-target="payload">
           <strong>02</strong>
-          <span>Default payload</span>
+          <span>Default values</span>
         </button>
         <button class="dff-form-step" type="button" data-dff-step-target="sync">
           <strong>03</strong>
-          <span>.env sync</span>
+          <span>Targeting</span>
+        </button>
+        <button class="dff-form-step" type="button" data-dff-step-target="review">
+          <strong>04</strong>
+          <span>Review</span>
         </button>
       </div>
 
@@ -90,6 +94,19 @@
             {% if form.default_value.help_text %}<small>{{ form.default_value.help_text }}</small>{% endif %}
             {{ form.default_value.errors }}
           </div>
+        </div>
+      </div>
+
+      <div class="dff-form-section" id="flag-form-review" data-dff-form-section="review">
+        <div class="dff-section-heading">
+          <p class="dff-kicker">Review</p>
+          <h2>Launch checkpoint</h2>
+        </div>
+        <div class="dff-review-checklist">
+          <span>Validate key format before save</span>
+          <span>Preview SDK usage after creation</span>
+          <span>Environment states start disabled</span>
+          <span>Production stays protected by targeting controls</span>
         </div>
       </div>
 

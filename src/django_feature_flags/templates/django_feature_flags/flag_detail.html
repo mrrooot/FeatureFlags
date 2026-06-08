@@ -2,16 +2,22 @@
 {% load static %}
 
 {% block content %}
-<header class="dff-page-header dff-flag-header">
+<header class="dff-page-header dff-flag-header" data-dff-screen="flag-detail" data-dff-visual-checkpoint="primary">
   <div>
-    <p class="dff-kicker">{{ flag.project.key }} / {{ state.environment.key }}</p>
+    <p class="dff-kicker">Flag control center / {{ flag.project.key }} / {{ state.environment.key }}</p>
     <h1>{{ flag.name }}</h1>
     <p class="dff-subtitle">
       <strong class="dff-code">{{ flag.key }}</strong>
       controls variation delivery for selected contexts in this environment.
     </p>
+    <div class="dff-header-meta">
+      <span>{{ flag.value_type }}</span>
+      <span>{{ states|length }} environment lanes</span>
+      {% if state.environment.requires_approval %}<span>Approval protected</span>{% else %}<span>Direct save lane</span>{% endif %}
+    </div>
   </div>
   <div class="dff-actions">
+    <button class="dff-button dff-button-secondary" type="button" data-dff-copy="{{ flag.key }}">Copy key</button>
     {% if state.enabled %}
     <span class="dff-status dff-status-live">Targeting on</span>
     {% else %}
@@ -21,6 +27,47 @@
     <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:flag_list' %}">Back to flags</a>
   </div>
 </header>
+
+<section class="dff-flag-command-grid" aria-label="Flag operational context">
+  <article class="dff-panel dff-environment-lanes">
+    <div class="dff-section-header">
+      <div>
+        <p class="dff-kicker">Environment lanes</p>
+        <h2>Rollout state by environment</h2>
+      </div>
+    </div>
+    <div class="dff-env-lane-list">
+      {% for item in states %}
+      <a class="dff-env-lane dff-env-lane-{{ item.environment.key }}{% if item.pk == state.pk %} dff-env-lane-active{% endif %}" href="{{ request.path }}?environment={{ item.environment.key }}" {% if item.pk == state.pk %}aria-current="page"{% endif %}>
+        <span class="dff-env-name">{{ item.environment.key }}</span>
+        {% if item.enabled %}
+        <strong>Enabled</strong>
+        {% else %}
+        <strong>Disabled</strong>
+        {% endif %}
+        <small>Last changed {{ item.updated_at|date:"M j, Y" }}</small>
+      </a>
+      {% endfor %}
+    </div>
+  </article>
+
+  <aside class="dff-panel dff-release-safety">
+    <p class="dff-kicker">Release safety</p>
+    <h2>Change checkpoint</h2>
+    {% if state.environment.key == "production" %}
+    <p><strong>This change affects production.</strong> Review the environment, reason, and targeting diff before saving.</p>
+    {% elif state.environment.requires_approval %}
+    <p>This environment requires approval. Saving will create a review request instead of applying immediately.</p>
+    {% else %}
+    <p>Changes in this environment can be applied directly and will write an audit entry.</p>
+    {% endif %}
+    <div class="dff-safety-list">
+      {% if state.environment.requires_approval %}<span>Approval required</span>{% else %}<span>No approval required</span>{% endif %}
+      {% if state.environment.require_change_reason %}<span>Reason required</span>{% else %}<span>Reason optional</span>{% endif %}
+      <span>Audit trail enabled</span>
+    </div>
+  </aside>
+</section>
 
 <nav class="dff-tabbar" aria-label="Flag sections">
   <span class="dff-tab dff-tab-active" aria-current="page">Targeting</span>
@@ -262,7 +309,8 @@
     </div>
   </section>
 
-  <aside class="dff-panel dff-targeting-preview" aria-labelledby="targeting-preview-heading">
+  <aside class="dff-targeting-side">
+  <section class="dff-panel dff-targeting-preview" aria-labelledby="targeting-preview-heading">
     <div>
       <span class="dff-label">Evaluation check</span>
       <h2 id="targeting-preview-heading">Preview evaluation</h2>
@@ -289,6 +337,39 @@
       </dl>
     </div>
     {% endif %}
+  </section>
+
+  <section class="dff-panel dff-sdk-panel" aria-labelledby="sdk-usage-heading">
+    <div class="dff-section-header">
+      <div>
+        <p class="dff-kicker">SDK usage</p>
+        <h2 id="sdk-usage-heading">Python example</h2>
+      </div>
+      <button class="dff-table-action" type="button" data-dff-copy-target="#sdk-python-snippet">Copy SDK snippet</button>
+    </div>
+    <pre class="dff-command-snippet" id="sdk-python-snippet"><code>from django_feature_flags import flags
+
+enabled = flags.bool_variation(
+    "{{ flag.key }}",
+    {"key": "user-123"},
+    default=False,
+    project="{{ flag.project.key }}",
+    environment="{{ state.environment.key }}",
+)</code></pre>
+  </section>
+
+  <section class="dff-panel dff-sdk-panel" aria-labelledby="template-usage-heading">
+    <div class="dff-section-header">
+      <div>
+        <p class="dff-kicker">Template usage</p>
+        <h2 id="template-usage-heading">Template guard</h2>
+      </div>
+      <button class="dff-table-action" type="button" data-dff-copy-target="#sdk-template-snippet">Copy SDK snippet</button>
+    </div>
+    <pre class="dff-command-snippet" id="sdk-template-snippet"><code>{% templatetag openblock %} if {{ flag.key }} {% templatetag closeblock %}
+  ...
+{% templatetag openblock %} endif {% templatetag closeblock %}</code></pre>
+  </section>
   </aside>
 
   <datalist id="targeting-context-kinds">

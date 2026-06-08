@@ -45,6 +45,96 @@
 
   document.querySelectorAll("[data-dff-metric-card]").forEach(addMetricVisual);
 
+  function toast(message) {
+    var region = document.querySelector("[data-dff-toast-region]");
+    if (!region) {
+      return;
+    }
+    var item = document.createElement("div");
+    item.className = "dff-toast";
+    item.textContent = message;
+    region.appendChild(item);
+    window.setTimeout(function () {
+      item.classList.add("dff-toast-exit");
+      window.setTimeout(function () {
+        item.remove();
+      }, prefersReducedMotion ? 0 : 180);
+    }, 2200);
+  }
+
+  function copyText(text) {
+    if (!text) {
+      return;
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(
+        function () {
+          toast("Copied to clipboard");
+        },
+        function () {
+          toast("Copy failed");
+        }
+      );
+      return;
+    }
+    toast("Clipboard unavailable");
+  }
+
+  function setupCopyButtons() {
+    document.addEventListener("click", function (event) {
+      var directCopy = event.target.closest("[data-dff-copy]");
+      if (directCopy) {
+        copyText(directCopy.getAttribute("data-dff-copy"));
+        return;
+      }
+
+      var targetCopy = event.target.closest("[data-dff-copy-target]");
+      if (!targetCopy) {
+        return;
+      }
+      var selector = targetCopy.getAttribute("data-dff-copy-target");
+      var target = selector ? document.querySelector(selector) : null;
+      copyText(target ? target.textContent : "");
+    });
+  }
+
+  function setupThemeToggle() {
+    var toggle = document.querySelector("[data-dff-theme-toggle]");
+    var page = document.documentElement;
+    if (!toggle || !page) {
+      return;
+    }
+
+    function setTheme(theme) {
+      page.setAttribute("data-dff-theme", theme);
+      toggle.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+    }
+
+    toggle.addEventListener("click", function () {
+      var next = page.getAttribute("data-dff-theme") === "dark" ? "light" : "dark";
+      setTheme(next);
+      toast(next === "dark" ? "Dark theme enabled" : "Light theme enabled");
+    });
+
+    setTheme(page.getAttribute("data-dff-theme") || "light");
+  }
+
+  function setupCommandSearch() {
+    var search = document.querySelector("[data-dff-command-search]");
+    if (!search) {
+      return;
+    }
+    document.addEventListener("keydown", function (event) {
+      var key = event.key ? event.key.toLowerCase() : "";
+      if ((event.metaKey || event.ctrlKey) && key === "k") {
+        event.preventDefault();
+        search.focus();
+        search.select();
+        toast("Search focused");
+      }
+    });
+  }
+
   function enhanceClickTargets() {
     var targets = document.querySelectorAll(
       "a, button, .dff-metric-card, .dff-board-stat, .dff-quick-actions a, .dff-review-list a, .dff-table-action"
@@ -178,6 +268,9 @@
   }
 
   enhanceClickTargets();
+  setupCopyButtons();
+  setupThemeToggle();
+  setupCommandSearch();
   setupFlagForm();
 
   if (!prefersReducedMotion) {

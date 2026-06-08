@@ -1,43 +1,75 @@
 {% extends "django_feature_flags/base.html" %}
 
 {% block content %}
-<header class="dff-page-header">
+<header class="dff-page-header dff-hero-header" data-dff-screen="overview" data-dff-visual-checkpoint="primary">
   <div>
     <p class="dff-kicker">Overview</p>
-    <h1>Feature flag console</h1>
-    <p class="dff-subtitle">Monitor flags, audiences, approvals, and recent targeting changes from one workspace.</p>
+    <h1>Feature release control center</h1>
+    <p class="dff-subtitle">Monitor rollout state, protected changes, environment coverage, and recent targeting activity from one operational workspace.</p>
+    <div class="dff-header-meta" aria-label="Workspace metadata">
+      <span>All projects</span>
+      <span>All environments</span>
+      <span>{{ audit_count }} audit events</span>
+    </div>
   </div>
   <div class="dff-actions">
-    <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:segment_list' %}">Create segment</a>
+    <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:segment_create' %}">Create segment</a>
     <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">Create flag</a>
   </div>
 </header>
 
 <section class="dff-metric-grid" aria-label="Workspace summary">
-  <a class="dff-metric-card" data-dff-metric-card href="{% url 'django_feature_flags_dashboard:flag_list' %}">
-    <span>Flags</span>
+  <a class="dff-metric-card dff-signal-card" data-dff-metric-card href="{% url 'django_feature_flags_dashboard:flag_list' %}">
+    <span class="dff-card-label">Total flags</span>
     <strong data-dff-metric-value>{{ flag_count }}</strong>
-    <small>Feature decisions</small>
+    <small>Feature decisions registered across projects</small>
   </a>
-  <a class="dff-metric-card" data-dff-metric-card href="{% url 'django_feature_flags_dashboard:segment_list' %}">
-    <span>Segments</span>
-    <strong data-dff-metric-value>{{ segment_count }}</strong>
-    <small>Reusable audiences</small>
+  <a class="dff-metric-card dff-signal-card" data-dff-metric-card href="{% url 'django_feature_flags_dashboard:flag_list' %}?status=live">
+    <span class="dff-card-label">Active flags</span>
+    <strong data-dff-metric-value>{{ flag_count }}</strong>
+    <small>Open the board to inspect environment exposure</small>
   </a>
-  <a class="dff-metric-card" data-dff-metric-card href="{% url 'django_feature_flags_dashboard:experiment_list' %}">
-    <span>Experiments</span>
-    <strong data-dff-metric-value>{{ experiment_count }}</strong>
-    <small>Running allocations</small>
-  </a>
-  <a class="dff-metric-card" data-dff-metric-card href="{% url 'django_feature_flags_dashboard:approval_list' %}">
-    <span>Needs review</span>
+  <a class="dff-metric-card dff-signal-card" data-dff-metric-card href="{% url 'django_feature_flags_dashboard:approval_list' %}">
+    <span class="dff-card-label">Pending approvals</span>
     <strong data-dff-metric-value>{{ approval_count }}</strong>
-    <small>Pending approvals</small>
+    <small>Protected-environment changes awaiting review</small>
+  </a>
+  <a class="dff-metric-card dff-signal-card" data-dff-metric-card href="{% url 'django_feature_flags_dashboard:audit_list' %}">
+    <span class="dff-card-label">Recent changes</span>
+    <strong data-dff-metric-value>{{ audit_count }}</strong>
+    <small>Audit events captured by the control plane</small>
   </a>
 </section>
 
+<section class="dff-environment-overview" aria-labelledby="environment-signal-heading">
+  <div class="dff-section-header">
+    <div>
+      <p class="dff-kicker">Environment signal</p>
+      <h2 id="environment-signal-heading">Environment status overview</h2>
+    </div>
+    <a class="dff-link" href="{% url 'django_feature_flags_dashboard:flag_list' %}">Open rollout board</a>
+  </div>
+  <div class="dff-env-grid">
+    <article class="dff-env-card dff-env-development">
+      <span class="dff-env-name">Development</span>
+      <strong>Flexible</strong>
+      <p>Fast iteration lane for early flag checks.</p>
+    </article>
+    <article class="dff-env-card dff-env-staging">
+      <span class="dff-env-name">Staging</span>
+      <strong>Checkpoint</strong>
+      <p>Pre-production validation and targeting review.</p>
+    </article>
+    <article class="dff-env-card dff-env-production">
+      <span class="dff-env-name">Production</span>
+      <strong>Protected</strong>
+      <p>Use approvals and change reasons for safer rollout decisions.</p>
+    </article>
+  </div>
+</section>
+
 <section class="dff-dashboard-grid">
-  <article class="dff-panel dff-panel-flush">
+  <article class="dff-panel dff-panel-flush dff-operations-panel">
     <div class="dff-section-header">
       <div>
         <p class="dff-kicker">Flags</p>
@@ -46,55 +78,41 @@
       <a class="dff-link" href="{% url 'django_feature_flags_dashboard:flag_list' %}">View all</a>
     </div>
     {% if recent_flags %}
-    <table class="dff-table">
-      <thead>
-        <tr>
-          <th>Flag</th>
-          <th>Project</th>
-          <th>Type</th>
-          <th>Environments</th>
-          <th>State</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for flag in recent_flags %}
-        <tr>
-          <td><strong class="dff-code">{{ flag.key }}</strong><span>{{ flag.name }}</span></td>
-          <td>{{ flag.project.key }}</td>
-          <td><span class="dff-status dff-status-neutral">{{ flag.value_type }}</span></td>
-          <td>
-            <div class="dff-chip-row">
-              {% for state in flag.states.all %}
-              <span class="dff-chip">{{ state.environment.key }}</span>
-              {% empty %}
-              <span class="dff-muted-text">No states</span>
-              {% endfor %}
-            </div>
-          </td>
-          <td>
-            {% if flag.archived %}
-            <span class="dff-status dff-status-archived">Archived</span>
-            {% else %}
-            <span class="dff-status dff-status-live">Ready</span>
-            {% endif %}
-          </td>
-          <td><a class="dff-table-action" href="{% url 'django_feature_flags_dashboard:flag_detail' flag.pk %}">Open</a></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="dff-operations-list">
+      {% for flag in recent_flags %}
+      <article class="dff-operation-row">
+        <div class="dff-row-beacon" aria-hidden="true"></div>
+        <div>
+          <strong>{{ flag.name }}</strong>
+          <span class="dff-code">{{ flag.key }}</span>
+        </div>
+        <div class="dff-chip-row" aria-label="Environment coverage">
+          {% for state in flag.states.all %}
+          <span class="dff-env-pill dff-env-pill-{{ state.environment.key }}{% if state.enabled %} dff-env-pill-on{% endif %}">
+            {{ state.environment.key }}
+            {% if state.enabled %}<small>on</small>{% else %}<small>off</small>{% endif %}
+          </span>
+          {% empty %}
+          <span class="dff-muted-text">No states</span>
+          {% endfor %}
+        </div>
+        <span class="dff-status dff-status-neutral">{{ flag.value_type }}</span>
+        <a class="dff-table-action" href="{% url 'django_feature_flags_dashboard:flag_detail' flag.pk %}">Open</a>
+      </article>
+      {% endfor %}
+    </div>
     {% else %}
     <div class="dff-empty">
+      <span class="dff-empty-visual" aria-hidden="true"></span>
       <strong>No flags yet</strong>
-      <span>Create a flag to start controlling rollout behavior by environment.</span>
+      <span>Create a flag to start controlling rollout behavior by environment. New flags begin safely disabled.</span>
       <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">Create flag</a>
     </div>
     {% endif %}
   </article>
 
-  <aside class="dff-side-stack">
-    <section class="dff-panel">
+  <aside class="dff-side-stack" aria-label="Operational side panels">
+    <section class="dff-panel dff-review-panel">
       <div class="dff-section-header">
         <div>
           <p class="dff-kicker">Review</p>
@@ -108,8 +126,8 @@
           <span>Review protected-environment changes before release.</span>
         </a>
         <a href="{% url 'django_feature_flags_dashboard:audit_list' %}">
-          <strong>{{ audit_count }} audit events</strong>
-          <span>Inspect the latest dashboard and approval activity.</span>
+          <strong>Recent audit activity</strong>
+          <span>{{ audit_count }} events available for traceability.</span>
         </a>
       </div>
     </section>
@@ -124,7 +142,7 @@
       <div class="dff-quick-actions">
         <a href="{% url 'django_feature_flags_dashboard:flag_create' %}">Create flag</a>
         <a href="{% url 'django_feature_flags_dashboard:segment_create' %}">Create segment</a>
-        <a href="{% url 'django_feature_flags_dashboard:experiment_list' %}">Open experiments</a>
+        <a href="{% url 'django_feature_flags_dashboard:approval_create' %}">Request approval</a>
         <a href="{% url 'django_feature_flags_dashboard:audit_list' %}">Open audit log</a>
       </div>
     </section>

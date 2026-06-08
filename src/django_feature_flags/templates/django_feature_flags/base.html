@@ -1,7 +1,7 @@
 {% load static dff_brand %}
 {% dff_dashboard_brand as dff_brand %}
 <!doctype html>
-<html lang="en">
+<html lang="en" data-dff-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,6 +10,7 @@
   <script defer src="{% static 'django_feature_flags/dashboard.js' %}"></script>
 </head>
 <body>
+  <a class="dff-skip-link" href="#main">Skip to console</a>
   <div class="dff-app-shell" data-dff-visual-root>
     <aside class="dff-sidebar" aria-label="Feature flags navigation">
       <a class="dff-brand" href="{% url 'django_feature_flags_dashboard:home' %}">
@@ -19,13 +20,47 @@
           <small>{{ dff_brand.tagline }}</small>
         </span>
       </a>
-      <nav class="dff-sidebar-nav">
-        <a href="{% url 'django_feature_flags_dashboard:flag_list' %}">Feature flags <span>Flags</span></a>
-        <a href="{% url 'django_feature_flags_dashboard:segment_list' %}">Segments <span>Audiences</span></a>
-        <a href="{% url 'django_feature_flags_dashboard:experiment_list' %}">Experiments <span>Tests</span></a>
-        <a href="{% url 'django_feature_flags_dashboard:approval_list' %}">Approvals <span>Review</span></a>
-        <a href="{% url 'django_feature_flags_dashboard:audit_list' %}">Audit log <span>Events</span></a>
+      <div class="dff-workspace-card" aria-label="Workspace context">
+        <span>Workspace</span>
+        <strong>All projects</strong>
+        <small>Release control center</small>
+      </div>
+      <nav class="dff-sidebar-nav" aria-label="Primary navigation">
+        <a href="{% url 'django_feature_flags_dashboard:home' %}"{% if active_nav == "overview" or request.resolver_match.view_name == "django_feature_flags_dashboard:home" %} aria-current="page"{% endif %}>
+          <span class="dff-nav-icon" aria-hidden="true">OV</span>
+          <strong>Overview</strong>
+          <small>Control room</small>
+        </a>
+        <a href="{% url 'django_feature_flags_dashboard:flag_list' %}"{% if active_nav == "flags" or request.resolver_match.view_name == "django_feature_flags_dashboard:flag_list" or request.resolver_match.view_name == "django_feature_flags_dashboard:flag_create" or request.resolver_match.view_name == "django_feature_flags_dashboard:flag_detail" or request.resolver_match.view_name == "django_feature_flags_dashboard:flag_update" %} aria-current="page"{% endif %}>
+          <span class="dff-nav-icon" aria-hidden="true">FF</span>
+          <strong>Feature flags</strong>
+          <small>Rollouts</small>
+        </a>
+        <a href="{% url 'django_feature_flags_dashboard:segment_list' %}"{% if active_nav == "segments" or request.resolver_match.view_name == "django_feature_flags_dashboard:segment_list" or request.resolver_match.view_name == "django_feature_flags_dashboard:segment_create" or request.resolver_match.view_name == "django_feature_flags_dashboard:segment_update" %} aria-current="page"{% endif %}>
+          <span class="dff-nav-icon" aria-hidden="true">SG</span>
+          <strong>Segments</strong>
+          <small>Audiences</small>
+        </a>
+        <a href="{% url 'django_feature_flags_dashboard:experiment_list' %}"{% if active_nav == "experiments" or request.resolver_match.view_name == "django_feature_flags_dashboard:experiment_list" or request.resolver_match.view_name == "django_feature_flags_dashboard:experiment_create" or request.resolver_match.view_name == "django_feature_flags_dashboard:experiment_update" %} aria-current="page"{% endif %}>
+          <span class="dff-nav-icon" aria-hidden="true">EX</span>
+          <strong>Experiments</strong>
+          <small>Tests</small>
+        </a>
+        <a href="{% url 'django_feature_flags_dashboard:approval_list' %}"{% if active_nav == "approvals" or request.resolver_match.view_name == "django_feature_flags_dashboard:approval_list" or request.resolver_match.view_name == "django_feature_flags_dashboard:approval_create" %} aria-current="page"{% endif %}>
+          <span class="dff-nav-icon" aria-hidden="true">AP</span>
+          <strong>Approvals</strong>
+          <small>Review</small>
+        </a>
+        <a href="{% url 'django_feature_flags_dashboard:audit_list' %}"{% if active_nav == "audit" or request.resolver_match.view_name == "django_feature_flags_dashboard:audit_list" or request.resolver_match.view_name == "django_feature_flags_dashboard:audit_detail" %} aria-current="page"{% endif %}>
+          <span class="dff-nav-icon" aria-hidden="true">AU</span>
+          <strong>Audit log</strong>
+          <small>Events</small>
+        </a>
       </nav>
+      <div class="dff-sidebar-status">
+        <span class="dff-live-dot" aria-hidden="true"></span>
+        <span>Console online</span>
+      </div>
     </aside>
     <div class="dff-workspace">
       <header class="dff-topbar" aria-label="Dashboard context">
@@ -37,10 +72,14 @@
           <span>Environment</span>
           <strong>All environments</strong>
         </div>
-        <form class="dff-search" role="search">
+        <form class="dff-search" role="search" action="{% url 'django_feature_flags_dashboard:flag_list' %}">
           <label for="dff-global-search">Search</label>
-          <input id="dff-global-search" type="search" name="q" aria-label="Search flags, segments, or keys">
+          <input id="dff-global-search" type="search" name="q" aria-label="Search flags, segments, or keys" placeholder="Search flags, keys, projects" data-dff-command-search>
         </form>
+        <div class="dff-topbar-actions">
+          <button class="dff-icon-button" type="button" aria-label="Toggle theme" data-dff-theme-toggle>Theme</button>
+          <a class="dff-button dff-button-primary" href="{% url 'django_feature_flags_dashboard:flag_create' %}">Create flag</a>
+        </div>
       </header>
       <main class="dff-main" id="main">
         {% if messages %}
@@ -54,6 +93,7 @@
       </main>
     </div>
   </div>
+  <div class="dff-toast-region" aria-live="polite" aria-atomic="true" data-dff-toast-region></div>
 </body>
 </html>
 

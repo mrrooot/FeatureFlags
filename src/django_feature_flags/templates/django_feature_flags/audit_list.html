@@ -1,11 +1,16 @@
 {% extends "django_feature_flags/base.html" %}
 
 {% block content %}
-<header class="dff-header">
+<header class="dff-header" data-dff-screen="audit" data-dff-visual-checkpoint="primary">
   <div>
-    <p class="dff-kicker">{{ style_name }} / Audit trace</p>
+    <p class="dff-kicker">Audit trace</p>
     <h1>Audit trail</h1>
-    <p class="dff-subtitle">Search recent flag, approval, segment, and experiment changes.</p>
+    <p class="dff-subtitle">Search recent flag, approval, segment, and experiment changes with actor, environment, and before/after context.</p>
+    <div class="dff-header-meta">
+      <span>Timeline</span>
+      <span>Diff detail</span>
+      <span>Searchable</span>
+    </div>
   </div>
 </header>
 
@@ -48,34 +53,28 @@
   <button class="dff-button dff-button-primary" type="submit">Filter</button>
 </form>
 
-<section class="dff-panel dff-panel-flush">
+<section class="dff-panel dff-panel-flush dff-audit-shell">
   {% if logs %}
-  <table class="dff-table dff-ledger-table">
-    <thead>
-      <tr>
-        <th>Action</th>
-        <th>Flag</th>
-        <th>Environment</th>
-        <th>Reason</th>
-        <th>When</th>
-        <th>Detail</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for log in logs %}
-      <tr>
-        <td><strong class="dff-code">{{ log.action }}</strong><span>{{ log.user|default:"System" }}</span></td>
-        <td>{% if log.flag %}<span class="dff-project-stamp">{{ log.flag.key }}</span>{% else %}<span class="dff-muted-text">None</span>{% endif %}</td>
-        <td>{% if log.environment %}<span class="dff-chip">{{ log.environment.key }}</span>{% else %}<span class="dff-muted-text">None</span>{% endif %}</td>
-        <td><span>{{ log.reason|default:"No reason" }}</span></td>
-        <td><span>{{ log.created_at }}</span></td>
-        <td><a class="dff-table-action" href="{% url 'django_feature_flags_dashboard:audit_detail' log.pk %}">View audit</a></td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="dff-audit-timeline">
+    {% for log in logs %}
+    <article class="dff-audit-event">
+      <div class="dff-timeline-pin" aria-hidden="true"></div>
+      <div class="dff-audit-event-main">
+        <strong class="dff-code">{{ log.action }}</strong>
+        <span>{{ log.user|default:"System" }} changed {% if log.flag %}{{ log.flag.key }}{% else %}a dashboard object{% endif %}</span>
+        <p>{{ log.reason|default:"No reason" }}</p>
+      </div>
+      <div class="dff-audit-event-meta">
+        {% if log.environment %}<span class="dff-env-pill dff-env-pill-{{ log.environment.key }}">{{ log.environment.key }}</span>{% else %}<span class="dff-muted-text">No environment</span>{% endif %}
+        <time datetime="{{ log.created_at|date:'c' }}">{{ log.created_at }}</time>
+      </div>
+      <a class="dff-table-action" href="{% url 'django_feature_flags_dashboard:audit_detail' log.pk %}">View audit</a>
+    </article>
+    {% endfor %}
+  </div>
   {% else %}
   <div class="dff-empty">
+    <span class="dff-empty-visual" aria-hidden="true"></span>
     <strong>No audit entries</strong>
     <span>Audit entries appear when services or approval reviews record changes.</span>
   </div>
