@@ -3659,3 +3659,408 @@ label span {
     animation: none !important;
   }
 }
+
+/* Guided add-flag flow and richer interaction states */
+@keyframes dff-step-sweep {
+  from {
+    transform: translateX(-110%);
+  }
+  to {
+    transform: translateX(110%);
+  }
+}
+
+@keyframes dff-section-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dff-env-pulse {
+  0%,
+  100% {
+    box-shadow: 0 12px 26px rgba(20, 165, 123, 0.12);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 18px 38px rgba(20, 165, 123, 0.24);
+    transform: scale(1.035);
+  }
+}
+
+@keyframes dff-env-flow {
+  from {
+    transform: translateX(-90%);
+  }
+  to {
+    transform: translateX(90%);
+  }
+}
+
+@keyframes dff-launch-pulse {
+  0%,
+  100% {
+    box-shadow: 0 16px 30px rgba(18, 107, 90, 0.2);
+  }
+  50% {
+    box-shadow: 0 20px 46px rgba(18, 107, 90, 0.34);
+  }
+}
+
+.dff-interactive {
+  cursor: pointer;
+}
+
+.dff-interactive.dff-is-pressed,
+.dff-button:active,
+.dff-table-action:active,
+.dff-tab:active,
+.dff-sidebar-nav a:active,
+.dff-metric-card:active,
+.dff-board-stat:active,
+.dff-quick-actions a:active,
+.dff-review-list a:active {
+  transform: translateY(1px) scale(0.985);
+}
+
+.dff-sidebar-nav a,
+.dff-tab,
+.dff-button,
+.dff-table-action,
+.dff-metric-card,
+.dff-board-stat,
+.dff-quick-actions a,
+.dff-review-list a,
+.dff-panel.dff-click-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.dff-sidebar-nav a::after,
+.dff-tab::after,
+.dff-button::after,
+.dff-table-action::after,
+.dff-metric-card::after,
+.dff-quick-actions a::after,
+.dff-review-list a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(110deg, transparent 0 38%, rgba(255, 255, 255, 0.38) 48%, transparent 62%);
+  transform: translateX(-120%);
+  transition: opacity 0.18s ease;
+}
+
+.dff-sidebar-nav a:hover::after,
+.dff-tab:hover::after,
+.dff-button:hover::after,
+.dff-table-action:hover::after,
+.dff-metric-card:hover::after,
+.dff-quick-actions a:hover::after,
+.dff-review-list a:hover::after {
+  opacity: 1;
+  animation: dff-step-sweep 0.86s ease;
+}
+
+.dff-button,
+.dff-table-action,
+.dff-tab,
+.dff-sidebar-nav a,
+.dff-metric-card,
+.dff-board-stat,
+.dff-quick-actions a,
+.dff-review-list a,
+.dff-side-panel {
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    color 0.18s ease;
+}
+
+.dff-button:hover,
+.dff-table-action:hover,
+.dff-tab:hover,
+.dff-sidebar-nav a:hover,
+.dff-metric-card:hover,
+.dff-board-stat:hover,
+.dff-quick-actions a:hover,
+.dff-review-list a:hover,
+.dff-side-panel:hover {
+  box-shadow: 0 18px 42px rgba(31, 50, 45, 0.12);
+}
+
+.dff-console-form {
+  transform-origin: top center;
+}
+
+.dff-console-form .dff-form-section,
+.dff-console-form .dff-form-actions,
+.dff-console-sidebar .dff-side-panel {
+  animation: dff-section-enter 0.42s ease both;
+}
+
+.dff-console-form .dff-form-section:nth-of-type(2) {
+  animation-delay: 70ms;
+}
+
+.dff-console-form .dff-form-actions {
+  animation-delay: 120ms;
+}
+
+.dff-console-sidebar .dff-side-panel:nth-child(1) {
+  animation-delay: 120ms;
+}
+
+.dff-console-sidebar .dff-side-panel:nth-child(2) {
+  animation-delay: 180ms;
+}
+
+.dff-form-manifest {
+  align-items: stretch;
+}
+
+.dff-form-manifest .dff-form-step {
+  position: relative;
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(34, 57, 50, 0.16);
+  border-radius: 8px;
+  padding: 0 12px;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(237, 247, 242, 0.68)),
+    rgba(255, 255, 255, 0.82);
+  color: var(--dff-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.dff-form-manifest .dff-form-step::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(110deg, transparent 0 38%, rgba(255, 255, 255, 0.5) 48%, transparent 62%),
+    linear-gradient(90deg, rgba(20, 165, 123, 0.08), transparent 54%);
+  transform: translateX(-120%);
+}
+
+.dff-form-manifest .dff-form-step:hover {
+  transform: translateY(-2px);
+  border-color: rgba(18, 107, 90, 0.28);
+  box-shadow: 0 16px 34px rgba(31, 50, 45, 0.1);
+}
+
+.dff-form-manifest .dff-form-step:hover::after,
+.dff-form-manifest .dff-form-step-active::after {
+  opacity: 1;
+  animation: dff-step-sweep 1s ease;
+}
+
+.dff-form-manifest .dff-form-step-active {
+  border-color: rgba(18, 107, 90, 0.36);
+  background:
+    linear-gradient(135deg, rgba(20, 165, 123, 0.16), rgba(47, 102, 211, 0.07)),
+    rgba(255, 255, 255, 0.9);
+  box-shadow: 0 16px 34px rgba(18, 107, 90, 0.12);
+}
+
+.dff-form-manifest .dff-form-step strong {
+  position: relative;
+  z-index: 1;
+  display: inline-grid;
+  place-items: center;
+  min-width: 29px;
+  min-height: 29px;
+  border-radius: 7px;
+  color: #ffffff;
+  background: var(--dff-accent);
+  font-family: var(--dff-font-code);
+  font-size: 10px;
+  font-weight: 560;
+}
+
+.dff-form-manifest .dff-form-step span {
+  position: relative;
+  z-index: 1;
+  display: inline;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--dff-heading);
+  font-family: var(--dff-font-ui);
+  font-size: 12px;
+  font-weight: 560;
+}
+
+.dff-form-section {
+  scroll-margin: 110px;
+  transition:
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    background 0.22s ease,
+    transform 0.22s ease;
+}
+
+.dff-console-form .dff-form-section:hover,
+.dff-console-form .dff-form-section-active {
+  border-color: rgba(18, 107, 90, 0.28);
+  background:
+    linear-gradient(125deg, rgba(20, 165, 123, 0.095), transparent 46%),
+    rgba(255, 255, 255, 0.86);
+  box-shadow: 0 18px 42px rgba(31, 50, 45, 0.1);
+}
+
+.dff-console-form .dff-form-section-active {
+  transform: translateY(-1px);
+}
+
+.dff-field {
+  position: relative;
+  overflow: hidden;
+}
+
+.dff-field::after {
+  content: "";
+  position: absolute;
+  inset: auto 10px 8px 10px;
+  height: 2px;
+  border-radius: 999px;
+  opacity: 0;
+  background: linear-gradient(90deg, var(--dff-mint), var(--dff-blue));
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: opacity 0.18s ease, transform 0.24s ease;
+}
+
+.dff-field-active,
+.dff-field-has-value {
+  border-color: rgba(18, 107, 90, 0.28);
+  background:
+    linear-gradient(135deg, rgba(20, 165, 123, 0.075), transparent 52%),
+    rgba(255, 255, 255, 0.92);
+}
+
+.dff-field-active {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(31, 50, 45, 0.1);
+}
+
+.dff-field-active::after,
+.dff-field-has-value::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.dff-field-active label,
+.dff-field-has-value label {
+  color: var(--dff-accent-dark);
+}
+
+[data-dff-launch-submit] {
+  position: relative;
+  min-width: 150px;
+  overflow: hidden;
+  animation: dff-launch-pulse 3.6s ease-in-out infinite;
+}
+
+[data-dff-launch-submit]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: linear-gradient(110deg, transparent 0 32%, rgba(255, 255, 255, 0.48) 48%, transparent 66%);
+  transform: translateX(-120%);
+}
+
+[data-dff-launch-submit]:hover::before,
+[data-dff-launch-submit].dff-launching::before {
+  opacity: 1;
+  animation: dff-step-sweep 0.8s ease;
+}
+
+[data-dff-launch-submit].dff-launching {
+  pointer-events: none;
+  transform: translateY(1px) scale(0.99);
+}
+
+.dff-env-signal {
+  overflow: hidden;
+}
+
+.dff-env-node {
+  animation: dff-env-pulse 3s ease-in-out infinite;
+}
+
+.dff-env-node-hot {
+  animation-delay: 0.42s;
+}
+
+.dff-env-line {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, rgba(20, 165, 123, 0.18), rgba(47, 102, 211, 0.4), rgba(200, 135, 45, 0.24));
+}
+
+.dff-env-line::after {
+  content: "";
+  position: absolute;
+  inset: -2px 0;
+  width: 58%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.94), transparent);
+  animation: dff-env-flow 1.8s ease-in-out infinite;
+}
+
+.dff-side-list span {
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.dff-side-list span:hover {
+  transform: translateX(3px);
+  border-color: rgba(18, 107, 90, 0.26);
+  background: rgba(20, 165, 123, 0.08);
+  color: var(--dff-accent-dark);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dff-sidebar-nav a::after,
+  .dff-tab::after,
+  .dff-button::after,
+  .dff-table-action::after,
+  .dff-metric-card::after,
+  .dff-quick-actions a::after,
+  .dff-review-list a::after,
+  .dff-form-manifest .dff-form-step::after,
+  [data-dff-launch-submit],
+  [data-dff-launch-submit]::before,
+  .dff-env-node,
+  .dff-env-line::after,
+  .dff-console-form .dff-form-section,
+  .dff-console-form .dff-form-actions,
+  .dff-console-sidebar .dff-side-panel {
+    animation: none !important;
+  }
+}

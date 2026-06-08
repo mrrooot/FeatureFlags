@@ -13,7 +13,7 @@
 </header>
 
 <section class="dff-form-layout dff-release-console">
-  <form class="dff-panel dff-form dff-console-form" method="post">
+  <form class="dff-panel dff-form dff-console-form" method="post" data-dff-flag-form>
     {% csrf_token %}
 
     <div class="dff-console-rail" aria-hidden="true">
@@ -27,34 +27,43 @@
       {% endif %}
 
       <div class="dff-form-manifest" aria-label="Flag save path">
-        <span><strong>01</strong> Identity lock</span>
-        <span><strong>02</strong> Default payload</span>
-        <span><strong>03</strong> .env sync</span>
+        <button class="dff-form-step dff-form-step-active" type="button" data-dff-step-target="identity" aria-current="step">
+          <strong>01</strong>
+          <span>Identity lock</span>
+        </button>
+        <button class="dff-form-step" type="button" data-dff-step-target="payload">
+          <strong>02</strong>
+          <span>Default payload</span>
+        </button>
+        <button class="dff-form-step" type="button" data-dff-step-target="sync">
+          <strong>03</strong>
+          <span>.env sync</span>
+        </button>
       </div>
 
-      <div class="dff-form-section dff-form-section-identity">
+      <div class="dff-form-section dff-form-section-identity" id="flag-form-identity" data-dff-form-section="identity">
         <div class="dff-section-heading">
           <p class="dff-kicker">{{ form_kicker }}</p>
           <h2>Flag identity</h2>
         </div>
         <div class="dff-form-grid">
-          <div class="dff-field">
+          <div class="dff-field" data-dff-field>
             <label for="{{ form.project.id_for_label }}">Project</label>
             {{ form.project }}
             {{ form.project.errors }}
           </div>
-          <div class="dff-field dff-code-field dff-primary-field">
+          <div class="dff-field dff-code-field dff-primary-field" data-dff-field>
             <label for="{{ form.key.id_for_label }}">Flag key</label>
             {{ form.key }}
             {% if form.key.help_text %}<small>{{ form.key.help_text }}</small>{% endif %}
             {{ form.key.errors }}
           </div>
-          <div class="dff-field">
+          <div class="dff-field" data-dff-field>
             <label for="{{ form.name.id_for_label }}">Display name</label>
             {{ form.name }}
             {{ form.name.errors }}
           </div>
-          <div class="dff-field">
+          <div class="dff-field" data-dff-field>
             <label for="{{ form.value_type.id_for_label }}">Value type</label>
             {{ form.value_type }}
             {{ form.value_type.errors }}
@@ -62,18 +71,18 @@
         </div>
       </div>
 
-      <div class="dff-form-section">
+      <div class="dff-form-section" id="flag-form-payload" data-dff-form-section="payload">
         <div class="dff-section-heading">
           <p class="dff-kicker">Payload</p>
           <h2>Default variation</h2>
         </div>
         <div class="dff-form-grid">
-          <div class="dff-field dff-field-full">
+          <div class="dff-field dff-field-full" data-dff-field>
             <label for="{{ form.description.id_for_label }}">Description</label>
             {{ form.description }}
             {{ form.description.errors }}
           </div>
-          <div class="dff-field dff-field-full dff-code-field">
+          <div class="dff-field dff-field-full dff-code-field" data-dff-field>
             <label for="{{ form.default_value.id_for_label }}">Default value</label>
             {{ form.default_value }}
             {% if form.default_value.help_text %}<small>{{ form.default_value.help_text }}</small>{% endif %}
@@ -84,13 +93,13 @@
 
       <div class="dff-form-actions">
         <a class="dff-button dff-button-secondary" href="{% url 'django_feature_flags_dashboard:flag_list' %}">Cancel</a>
-        <button class="dff-button dff-button-primary" type="submit">{{ submit_label }}</button>
+        <button class="dff-button dff-button-primary" type="submit" data-dff-launch-submit>{{ submit_label }}</button>
       </div>
     </div>
   </form>
 
   <aside class="dff-form-sidebar dff-console-sidebar">
-    <section class="dff-panel dff-side-panel dff-side-panel-env">
+    <section class="dff-panel dff-side-panel dff-side-panel-env" id="flag-form-sync" data-dff-form-section="sync">
       <p class="dff-kicker">Safe by default</p>
       <h2>{{ side_heading }}</h2>
       <div class="dff-env-signal" aria-hidden="true">

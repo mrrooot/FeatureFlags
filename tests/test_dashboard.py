@@ -57,6 +57,27 @@ def test_staff_can_open_create_flag_form(client, staff_user, settings):
 
 
 @pytest.mark.django_db
+def test_create_flag_form_exposes_interaction_hooks(client, staff_user, settings):
+    settings.DJANGO_FEATURE_FLAGS_ENVIRONMENTS = ("development", "staging", "production")
+    Project.objects.create(key="ecommerce", name="Ecommerce")
+    client.force_login(staff_user)
+
+    response = client.get(reverse("django_feature_flags_dashboard:flag_create"))
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert 'data-dff-flag-form' in content
+    assert 'data-dff-step-target="identity"' in content
+    assert 'data-dff-step-target="payload"' in content
+    assert 'data-dff-step-target="sync"' in content
+    assert 'data-dff-form-section="identity"' in content
+    assert 'data-dff-form-section="payload"' in content
+    assert 'data-dff-form-section="sync"' in content
+    assert 'data-dff-field' in content
+    assert 'data-dff-launch-submit' in content
+
+
+@pytest.mark.django_db
 def test_staff_can_create_flag_with_default_variation_and_configured_environment_states(client, staff_user, settings):
     settings.DJANGO_FEATURE_FLAGS_ENVIRONMENTS = ("development", "staging", "production")
     project = Project.objects.create(key="ecommerce", name="Ecommerce")
