@@ -46,16 +46,29 @@ def normalized_targeting(state):
     return document
 
 
-def validate_targeting(flag, environment, document):
+def validate_targeting_document(
+    document,
+    *,
+    variation_keys,
+    segment_keys,
+    other_flag_keys,
+    default_variation_key="",
+):
+    """Validate a targeting document against pre-resolved key sets.
+
+    This is the DB-free core of :func:`validate_targeting`. Callers that already
+    hold the flag's variation/segment/sibling-flag keys (for example the cached
+    evaluation config) can validate without issuing any queries.
+    """
     errors = {}
-    cleaned = empty_targeting(flag.variations.filter(is_default=True).values_list("key", flat=True).first() or "")
+    cleaned = empty_targeting(default_variation_key or "")
     cleaned.update(deepcopy(document or {}))
-    variation_keys = set(flag.variations.values_list("key", flat=True))
-    segment_keys = set(flag.project.segments.values_list("key", flat=True))
-    flag_keys = set(flag.project.flags.exclude(pk=flag.pk).values_list("key", flat=True))
+    variation_keys = set(variation_keys)
+    segment_keys = set(segment_keys)
+    other_flag_keys = set(other_flag_keys)
 
     _validate_variation_key(errors, "off_variation", cleaned.get("off_variation"), variation_keys)
-    _validate_prerequisites(errors, cleaned.get("prerequisites", []), flag_keys)
+    _validate_prerequisites(errors, cleaned.get("prerequisites", []), other_flag_keys)
     _validate_targets(errors, cleaned.get("targets", []), variation_keys)
     _validate_rules(errors, cleaned.get("rules", []), variation_keys, segment_keys)
     _validate_serve(errors, "fallthrough", cleaned.get("fallthrough", {}), variation_keys)
@@ -68,6 +81,16 @@ def validate_targeting(flag, environment, document):
     cleaned["rules"] = cleaned.get("rules", [])
     cleaned["track_events"] = bool(cleaned.get("track_events", False))
     return cleaned
+
+
+def validate_targeting(flag, environment, document):
+    return validate_targeting_document(
+        document,
+        variation_keys=flag.variations.values_list("key", flat=True),
+        segment_keys=flag.project.segments.values_list("key", flat=True),
+        other_flag_keys=flag.project.flags.exclude(pk=flag.pk).values_list("key", flat=True),
+        default_variation_key=flag.variations.filter(is_default=True).values_list("key", flat=True).first() or "",
+    )
 
 
 def _validate_variation_key(errors, section, variation_key, variation_keys):
