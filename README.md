@@ -189,6 +189,67 @@ flags.json_variation(flag_key, context, default=None, project="default", environ
 
 Set `track=True` to record evaluation events.
 
+## Caching & Database Cost
+
+Every evaluation needs configuration data — the flag, its variations, the
+environment's flag state, the targeting document, targeting rules, any running
+experiment, and referenced segments. Read straight from the database that is
+roughly a dozen queries per flag check (targeting validation alone runs four).
+
+To remove that from the hot path, evaluation reads from a cached, immutable
+**config snapshot** built once per `(project, environment)` and stored in
+Django's cache framework. On a cache hit, evaluating any flag in that
+environment issues **zero database queries** (a `track=True` write is the only
+exception — one insert). A representative flag with a segment rule:
+
+| | 50 evaluations |
+| --- | --- |
+| Uncached | ~450 queries |
+| Cached (steady state) | 0 queries |
+
+The first evaluation after a change pays a single small build (~8–10 queries)
+that then serves every flag in the environment until the next write.
+
+### Invalidation
+
+Any write to a config model (flag, variation, flag state, targeting rule,
+segment, experiment, …) invalidates every cached snapshot immediately via
+Django signals. A TTL bounds staleness as a backstop — this matters in two
+cases:
+
+- **Per-process caches** (the default `LocMemCache`): a write in one worker
+  can't reach another worker's memory, so other workers refresh within the TTL.
+  Point the cache alias at a **shared backend (Redis/Memcached)** for instant
+  cross-process invalidation.
+- **Bulk writes** that bypass signals (`QuerySet.update()`, `bulk_create()`):
+  these refresh within the TTL. Call
+  `django_feature_flags.evaluation.config.bump_generation()` to invalidate
+  immediately.
+
+### Settings
+
+| Setting | Default | Purpose |
+| --- | --- | --- |
+| `DJANGO_FEATURE_FLAGS_CACHE_ENABLED` | `True` | Turn the config cache on/off. When off, behavior is identical but every evaluation reads the database. |
+| `DJANGO_FEATURE_FLAGS_CACHE_ALIAS` | `"default"` | Which `CACHES` alias to use. Use a shared backend in production. |
+| `DJANGO_FEATURE_FLAGS_CACHE_TTL` | `300` | Snapshot lifetime in seconds (staleness backstop). |
+
+```python
+# settings.py
+CACHES = {
+    "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
+    "feature_flags": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+    },
+}
+DJANGO_FEATURE_FLAGS_CACHE_ALIAS = "feature_flags"
+DJANGO_FEATURE_FLAGS_CACHE_TTL = 300
+```
+
+The dashboard targeting **preview** always evaluates against live, unsaved edits
+and bypasses the cache.
+
 ## Remote Evaluation API
 
 Remote callers can evaluate flags with an SDK key.

@@ -10,6 +10,34 @@ DEFAULT_BRAND_MARK = "TQ"
 DEFAULT_BRAND_TAGLINE = "Feature flag console"
 DEFAULT_BRAND_TITLE = "Thiqal Feature Flags"
 
+# Evaluation config caching. Flag/state/variation/targeting/segment/experiment
+# config is read on every evaluation; caching it removes those queries from the
+# hot path. Point CACHE_ALIAS at a shared backend (Redis/Memcached) for instant
+# cross-process invalidation; with a per-process cache, staleness is bounded by
+# CACHE_TTL.
+DEFAULT_CACHE_ALIAS = "default"
+DEFAULT_CACHE_TTL = 300
+
+
+def cache_enabled():
+    return bool(getattr(django_settings, "DJANGO_FEATURE_FLAGS_CACHE_ENABLED", True))
+
+
+def cache_alias():
+    return configured_value("DJANGO_FEATURE_FLAGS_CACHE_ALIAS", DEFAULT_CACHE_ALIAS)
+
+
+def cache_ttl():
+    raw = getattr(django_settings, "DJANGO_FEATURE_FLAGS_CACHE_TTL", None)
+    if raw is None:
+        raw = os.environ.get("DJANGO_FEATURE_FLAGS_CACHE_TTL")
+    if raw is None:
+        return DEFAULT_CACHE_TTL
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return DEFAULT_CACHE_TTL
+
 
 def configured_value(setting_name, default):
     configured = getattr(django_settings, setting_name, None)

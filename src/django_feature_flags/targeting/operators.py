@@ -82,27 +82,48 @@ def clause_matches(context, clause):
     return matched
 
 
-def segment_clause_matches(context, clause, project):
+def _segment_rule_sets(clause, project=None, segments=None):
+    """Yield lists of {"conditions", "exclude"} for each referenced segment.
+
+    When ``segments`` (a mapping of segment key -> rule dicts, e.g. from the
+    cached evaluation config) is supplied it is used directly and no query is
+    issued. Otherwise the segments are loaded from ``project`` as before.
+    """
     segment_keys = clause.get("values", [])
+    if segments is not None:
+        for key in segment_keys:
+            rules = segments.get(key)
+            if rules is not None:
+                yield rules
+        return
+    if project is None:
+        return
+    for segment in project.segments.filter(key__in=segment_keys).prefetch_related("rules"):
+        yield [{"conditions": rule.conditions, "exclude": rule.exclude} for rule in segment.rules.all()]
+
+
+def segment_clause_matches(context, clause, project=None, segments=None):
     context_kind = clause.get("context_kind", "user")
     selected_context = normalize_contexts(context).get(context_kind, {})
-    for segment in project.segments.filter(key__in=segment_keys).prefetch_related("rules"):
+    for rules in _segment_rule_sets(clause, project=project, segments=segments):
         include = True
-        for rule in segment.rules.all():
-            matched = conditions_match(selected_context, rule.conditions)
-            if rule.exclude and matched:
+        for rule in rules:
+            matched = conditions_match(selected_context, rule.get("conditions", []))
+            if rule.get("exclude") and matched:
                 include = False
-            if not rule.exclude and not matched:
+            if not rule.get("exclude") and not matched:
                 include = False
         if include:
             return not clause.get("negate", False)
     return bool(clause.get("negate", False))
 
 
-def clauses_match(context, clauses, project=None):
+def clauses_match(context, clauses, project=None, segments=None):
     for clause in clauses:
         if clause.get("operator") == "segment_match":
-            if project is None or not segment_clause_matches(context, clause, project):
+            if project is None and segments is None:
+                return False
+            if not segment_clause_matches(context, clause, project=project, segments=segments):
                 return False
         elif not clause_matches(context, clause):
             return False
