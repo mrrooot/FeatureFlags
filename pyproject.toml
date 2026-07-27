@@ -8,9 +8,37 @@ version = "0.2.0"
 description = "Embedded Django feature flag platform with dashboard, evaluation API, events, and experiments."
 readme = "README.md"
 requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "mrrooot", email = "mohammed.abdulghaffar@thiqal.net" },
+]
+keywords = ["django", "feature-flags", "feature-toggles", "experimentation", "ab-testing", "rollout"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Web Environment",
+  "Framework :: Django",
+  "Framework :: Django :: 4.2",
+  "Framework :: Django :: 5.0",
+  "Framework :: Django :: 5.1",
+  "Framework :: Django :: 5.2",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
 dependencies = [
   "Django>=4.2,<6.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/mrrooot/FeatureFlags"
+Repository = "https://github.com/mrrooot/FeatureFlags"
+Issues = "https://github.com/mrrooot/FeatureFlags/issues"
 
 [project.optional-dependencies]
 test = [
